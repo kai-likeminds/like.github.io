@@ -1,0 +1,4137 @@
+/*!
+######################################################
+
+# ORACLE-CHAT.JS
+
+# OCOM GLOBAL ASSET RELEASE: 17.x - DEV BUILD r26841
+
+# BUILD DATE: Wed May 29 2019 09:38:20 GMT-0700 (PDT)
+
+# COPYRIGHT ORACLE CORP 2019 [UNLESS STATED OTHERWISE]
+
+######################################################
+*/
+
+
+
+// ORACLE
+
+/*! ORACLE - PROFILE V2 */
+var USER = new getUserInfo();
+
+// EXISTSUCMCOOKIE
+function existsUCMCookie(s) {
+  if (s == "ORA_UCM_INFO") {
+    if ((ORA_UCM_INFO.version != null) && (ORA_UCM_INFO.guid != null) && (ORA_UCM_INFO.username != null)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// ISUCMREGISTERED
+function isUCMRegistered() {
+  if (existsUCMCookie("ORA_UCM_INFO") == true) {
+    orainfo_exists = true;
+    otnnm_exists = true;
+    return true;
+  }
+  return false;
+}
+
+// ISUCMANONYMOUS
+function isUCMAnonymous() {
+  if ((ORA_UCM_INFO.version != null) && (ORA_UCM_INFO.guid != null) && (isUCMRegistered() == false)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+// GETUCMCOOKIES
+function getUCMCookies() {
+  ORA_UCM_INFO = new private_ORA_UCM_INFO();
+}
+
+// GETCOOKIEDATA
+function getCookieData(label) {
+  var labelLen = label.length;
+  var cLen = document.cookie.length;
+  var i = 0;
+  var cEnd;
+  while (i < cLen) {
+    var j = i + labelLen;
+    if (document.cookie.substring(i, j) == label) {
+      cEnd = document.cookie.indexOf(";", j);
+      if (cEnd == -1) {
+        cEnd = document.cookie.length;
+      }
+      j++;
+      var u = decodeURIComponent(document.cookie.substring(j, cEnd).replace(/\+/g, "%20"));
+      return cleanCookieContent(u);
+    }
+    i++;
+  }
+  return "";
+}
+
+function cleanCookieContent(sContent) {
+  var sMe = (typeof(sContent) == "undefined") ? "NoData" : sContent;
+  var badChar = "<>";
+  if (sMe != "NoData") {
+    var al = sMe.length;
+    for (i = 0; i < al; i++) {
+      if (sMe.substr(i, 1) != "." && sMe.substr(i, 1) != "?" && badChar.search(sMe.substr(i, 1)) > -1) {
+        sMe = "Invalid";
+        i = al + 1;
+      }
+    }
+  }
+  return sMe;
+}
+
+// GETUSERINFO
+function getUserInfo() {
+  var USER = new Object();
+  this.value_enc = getCookieData("ORA_UCM_INFO");
+  this.array = this.value_enc.split("~");
+  USER.version = this.array[0];
+  USER.guid = this.array[1];
+  USER.firstname = this.array[2];
+  USER.lastname = this.array[3];
+  USER.username = this.array[4];
+  return USER;
+}
+
+// INVALIDATEAUTHCOOKIE
+function invalidateAuthCookie() {
+  var oraSSOauthHint = getCookieData("ORASSO_AUTH_HINT");
+  if (oraSSOauthHint != null) {
+    var cookie_invalid_str = "ORASSO_AUTH_HINT=INVALID; Max-Age=0; domain=.oracle.com; path=/;";
+    document.cookie = cookie_invalid_str;
+  }
+}
+
+// SSO_SIGN_OUT
+function sso_sign_out() {
+
+  var rUrl = escape(window.location.href.replace(/^http:/gi, 'https:'));
+
+  if ((rUrl.indexOf('\/secure') != -1)) {
+    rUrl = 'http://www.oracle.com/partners/';
+  }
+  invalidateAuthCookie();
+  if (window.location.host.indexOf("-stage") > -1) {
+    window.location = "https://login-stage.oracle.com/sso/logout?p_done_url=" + rUrl;
+  } else {
+    window.location = "https://login.oracle.com/sso/logout?p_done_url=" + rUrl;
+  }
+  return false;
+}
+
+// PRIVATE_UCMCOOKIEDECODE
+function private_UCMCookieDecode(value) {
+  var asciiArray = " !\"#$&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~.";
+  var urldecodevalue = unescape(value);
+  var ucmdecodevalue = '';
+  var ch = '';
+  for (i = 0; i < urldecodevalue.length; i++) {
+    ch = urldecodevalue.charAt(i)
+    j = asciiArray.indexOf(ch);
+    if (j != -1) {
+      j += 2;
+      if (j > (asciiArray.length - 1)) {
+        j -= asciiArray.length;
+      }
+      ucmdecodevalue += asciiArray.charAt(j);
+    } else {
+      ucmdecodevalue += ch;
+    }
+  }
+  return ucmdecodevalue;
+}
+
+// PRIVATE_ORA_UCM_INFO
+function private_ORA_UCM_INFO() {
+  this.value_enc = getCookieData("ORA_UCM_INFO");
+  this.array = this.value_enc.split("~");
+  this.version = this.array[0];
+  this.guid = this.array[1];
+  this.firstname = this.array[2];
+  this.lastname = this.array[3];
+  this.username = this.array[4];
+  var newCookie = ["3", this.guid, this.firstname, this.lastname, this.username];
+  var cookieData = newCookie.join("~");
+}
+
+
+/*! ORACLE - CALLME  */
+
+function startCallback(ichannel, tmp) {
+
+  var netcall_url = "http://www.oracle.com/us/assets/";
+  var w = 440;
+  var h = 260;
+
+  var codes = new Array();
+  codes[0] = ["Oracle.com", "0i2wzK12842", "321884", "0", "0", "1", "netcallocomlauncher.html", "netcallocomthankyou.html", "netcallocomerror.html", "5:00am - 5:00pm PST"];
+  codes[1] = ["Oracle Education", "2WcKOh12631", "322065", "0", "0", "1", "launcher.html", "thankyou.html", "error.html", "5:00am - 5:00pm PST"];
+  codes[2] = ["Oracle Brazil", "QoEOxb13081", "344401", "0", "0", "55", "launcher-br.html", "thankyou-br.html", "error-br.html", "9h00 - 18h00"];
+  codes[3] = ["Oracle Consulting", "invalid", "379366", "0", "0", "1", "launcher.html", "thankyou.html", "error.html", " "];
+  codes[4] = ["Oracle Netherlands", "8StUfs2022", "365383", "0", "0", "31", "launcher.html", "thankyou.html", "error.html", " "];
+  codes[5] = ["Oracle UK", "EIKzPM13381", "365383", "0", "0", "44", "launcher.html", "thankyou.html", "error.html", "9:00am - 6:00pm"];
+  codes[6] = ["Oracle France", "Osyzdu3268", "365383", "0", "0", "33", "launcher-fr.html", "thankyou-fr.html", "error-fr.html", "9h ? 18h CET"];
+  codes[7] = ["Oracle Portugal", "okWd3e3309", "365383", "0", "0", "351", "launcher.html", "thankyou.html", "error.html", "9:00am - 6:00pm"];
+  codes[8] = ["Oracle Spain", "1M4DJm3310", "365383", "0", "0", "34", "launcher.html", "thankyou.html", "error.html", " "];
+
+  for (var i = 0; i < codes.length; i++) {
+    if (ichannel == codes[i][1]) {
+
+      // build url
+      var url = netcall_url + codes[i][6] +
+        "?memberid=" + codes[i][2] +
+        "&country=" + codes[i][5] +
+        "&responseurl=" + netcall_url + codes[i][7] +
+        "&errorurl=" + netcall_url + codes[i][8] +
+        "&timezone=" + escape(codes[i][9]);
+
+      // adjust window size if necessary
+      width = ((codes[i][3] == 0) ? w : codes[i][3]);
+      height = ((codes[i][4] == 0) ? h : codes[i][4]);
+
+      win = window.open(url, 'netcall', "width=" + width + ",height=" + height + ",scrollbars=yes,resizable=yes,menubar=no,location=no");
+      win.opener = self;
+      break;
+    }
+  }
+}
+
+function startNewCallback(ichannel, tmp) {
+
+  var netcall_url = "http://" + location.hostname + "/ocom/groups/public/@ocompublic/documents/webcontent/";
+
+  var w = 565;
+  var h = 515;
+
+  var codes = new Array();
+  codes[0] = ["Oracle.com", "0i2wzK12842", "321884", "0", "0", "1", "netcallcrmodlauncher.html", "netcallcrmodthankyou.html", "netcallnhthankyou.html", "netcallcrmoderror.html", "5:00 - 17:00 PST"];
+  codes[1] = ["Oracle Education", "2WcKOh12631", "322065", "0", "0", "1", "launcher.html", "thankyou.html", "nhthankyou.html", "error.html", "5:00am - 5:00pm PST"];
+  codes[2] = ["Oracle Brazil", "QoEOxb13081", "344401", "0", "0", "55", "launcher-br.html", "thankyou-br.html", "nhthankyou.html", "error-br.html", "9h00 - 18h00"];
+  codes[3] = ["Oracle Consulting", "invalid", "379366", "0", "0", "1", "launcher.html", "thankyou.html", "nhthankyou.html", "error.html", " "];
+  codes[4] = ["Oracle Netherlands", "8StUfs2022", "365383", "0", "0", "31", "launcher.html", "thankyou.html", "nhthankyou.html", "error.html", " "];
+  codes[5] = ["Oracle UK", "EIKzPM13381", "365383", "0", "0", "44", "launcher.html", "thankyou.html", "nhthankyou.html", "error.html", "9:00am - 6:00pm"];
+  codes[6] = ["Oracle France", "Osyzdu3268", "365383", "0", "0", "33", "launcher-fr.html", "thankyou-fr.html", "nhthankyou.html", "error-fr.html", "9h ? 18h CET"];
+  codes[7] = ["Oracle Portugal", "okWd3e3309", "365383", "0", "0", "351", "launcher.html", "thankyou.html", "nhthankyou.html", "error.html", "9:00am - 6:00pm"];
+  codes[8] = ["Oracle Spain", "1M4DJm3310", "365383", "0", "0", "34", "launcher.html", "thankyou.html", "nhthankyou.html", "error.html", " "];
+
+  for (var i = 0; i < codes.length; i++) {
+    if (ichannel == codes[i][1]) {
+
+      // build url
+
+      var url = netcall_url + codes[i][6] +
+        "?memberid=" + codes[i][2] +
+        "&country=" + codes[i][5] +
+        "&responseurl=" + netcall_url + codes[i][7] +
+        "&errorurl=" + netcall_url + codes[i][9] +
+        "&timezone=" + escape(codes[i][10]) +
+        "&ichannel=" + escape(codes[i][1]) +
+        "&nhresponseurl1=" + netcall_url + codes[i][8];
+
+      // adjust window size if necessary
+      width = ((codes[i][3] == 0) ? w : codes[i][3]);
+      height = ((codes[i][4] == 0) ? h : codes[i][4]);
+
+      win = window.open(url, 'netcall', "width=" + width + ",height=" + height + ",scrollbars=yes,resizable=yes,menubar=no,location=no");
+      win.opener = self;
+      break;
+    }
+  }
+}
+
+
+// GENERIC UTILITIES
+
+/*! GENERIC - AUTOCLEAR */
+/**
+ * Clears an input field on focus and restores the default value on blur
+ *
+ * @hook autoclear
+ * @requires jQuery
+ * @example
+ * <input type="text" class="autoclear" />
+ */
+jQuery(document).ready(function($) {
+  $('input.autoclear').bind('focus', function(e) {
+    var i = $(this).get(0);
+    if (i.value == i.defaultValue) {
+      i.value = '';
+    }
+  });
+
+  $('input.autoclear').bind('blur', function(e) {
+    var i = $(this).get(0);
+    if (i.value == '') {
+      i.value = i.defaultValue;
+    }
+  });
+});
+
+/*! VENDOR-AWESOMPLETE */
+/**
+ * Simple, lightweight, usable local autocomplete library for modern browsers
+ * @author Lea Verou http://leaverou.github.io/awesomplete
+ * @see https://github.com/LeaVerou/awesomplete
+ * @version  1.1.2x (01/25/2018)
+ * MIT license
+ *
+ * 01/25/2018 (TG) : Configure this.container to support appendTo option
+ * 									 Use <b> for match highlight instead of <mark>
+ * 									 Add jQuery.fn.autocomplete plugin for backwards compatibility to
+ * 									 	jQuery.ui.autocomplete
+ * 									 Add classes from jQuery UI to preserve styling
+ */
+
+/* globals Awesomplete */
+(function() {
+  'use strict';
+
+  var _ = function(input, o) {
+
+    var me = this;
+
+    // Keep track of number of instances for unique IDs
+    Awesomplete.count = (Awesomplete.count || 0) + 1;
+    this.count = Awesomplete.count;
+
+    // Setup
+
+    this.isOpened = false;
+
+    this.input = $(input);
+    this.input.setAttribute("autocomplete", "off");
+    this.input.setAttribute("aria-owns", "awesomplete_list_" + this.count);
+    this.input.setAttribute("role", "combobox");
+
+    o = o || {};
+
+    configure(this, {
+      minChars: 2,
+      maxItems: 10,
+      appendTo: null,
+      autoFirst: false,
+      data: _.DATA,
+      filter: _.FILTER_CONTAINS,
+      sort: o.sort ? o.sort : _.SORT_BYLENGTH,
+      item: _.ITEM,
+      replace: _.REPLACE
+    }, o);
+
+    this.index = -1;
+
+    // Create necessary elements
+
+    if (this.appendTo) {
+      $(this.appendTo).classList.add("awesomplete");
+      this.container = $(this.appendTo);
+    } else {
+      this.container = $.create("div", {
+        className: "awesomplete",
+        around: input
+      });
+    }
+
+    this.ul = $.create("ul", {
+      // recreate jQuery.ui classes for styling
+      className: "ui-menu ui-widget ui-widget-content ui-autocomplete ui-front",
+      hidden: "hidden",
+      role: "listbox",
+      id: "awesomplete_list_" + this.count,
+      inside: this.container
+    });
+
+    this.status = $.create("span", {
+      className: "visually-hidden",
+      role: "status",
+      "aria-live": "assertive",
+      "aria-atomic": true,
+      inside: this.container,
+      textContent: this.minChars !== 0 ?
+        ("Type " + this.minChars + " or more characters for results.") : "Begin typing for results."
+    });
+
+    // Bind events
+
+    this._events = {
+      input: {
+        "input": this.evaluate.bind(this),
+        "blur": this.close.bind(this, {
+          reason: "blur"
+        }),
+        "keydown": function(evt) {
+          var c = evt.keyCode;
+
+          // If the dropdown `ul` is in view, then act on keydown for the following keys:
+          // Enter / Esc / Up / Down
+          if (me.opened) {
+            if (c === 13 && me.selected) { // Enter
+              evt.preventDefault();
+              me.select();
+            } else if (c === 27) { // Esc
+              me.close({
+                reason: "esc"
+              });
+            } else if (c === 38 || c === 40) { // Down/Up arrow
+              evt.preventDefault();
+              me[c === 38 ? "previous" : "next"]();
+            }
+          }
+        }
+      },
+      form: {
+        "submit": this.close.bind(this, {
+          reason: "submit"
+        })
+      },
+      ul: {
+        "mousedown": function(evt) {
+          var li = evt.target;
+
+          if (li !== this) {
+
+            while (li && !/li/i.test(li.nodeName)) {
+              li = li.parentNode;
+            }
+
+            if (li && evt.button === 0) { // Only select on left click
+              evt.preventDefault();
+              me.select(li, evt.target);
+            }
+          }
+        }
+      }
+    };
+
+    $.bind(this.input, this._events.input);
+    $.bind(this.input.form, this._events.form);
+    $.bind(this.ul, this._events.ul);
+
+    if (this.input.hasAttribute("list")) {
+      this.list = "#" + this.input.getAttribute("list");
+      this.input.removeAttribute("list");
+    } else {
+      this.list = this.input.getAttribute("data-list") || o.list || [];
+    }
+
+    _.all.push(this);
+  };
+
+  _.prototype = {
+    set list(list) {
+      if (Array.isArray(list)) {
+        this._list = list;
+      } else if (typeof list === "string" && list.indexOf(",") > -1) {
+        this._list = list.split(/\s*,\s*/);
+      } else { // Element or CSS selector
+        list = $(list);
+
+        if (list && list.children) {
+          var items = [];
+          slice.apply(list.children).forEach(function(el) {
+            if (!el.disabled) {
+              var text = el.textContent.trim();
+              var value = el.value || text;
+              var label = el.label || text;
+              if (value !== "") {
+                items.push({
+                  label: label,
+                  value: value
+                });
+              }
+            }
+          });
+          this._list = items;
+        }
+      }
+
+      if (document.activeElement === this.input) {
+        this.evaluate();
+      }
+    },
+
+    get val() {
+      return this.input.value;
+    },
+
+    get selected() {
+      return this.index > -1;
+    },
+
+    get opened() {
+      return this.isOpened;
+    },
+
+    close: function(o) {
+      if (!this.opened) {
+        return;
+      }
+
+      this.ul.setAttribute("hidden", "");
+      this.isOpened = false;
+      this.index = -1;
+
+      this.status.setAttribute("hidden", "");
+
+      $.fire(this.input, "awesomplete-close", o || {});
+    },
+
+    open: function() {
+      this.ul.removeAttribute("hidden");
+      this.isOpened = true;
+
+      this.status.removeAttribute("hidden");
+
+      if (this.autoFirst && this.index === -1) {
+        this.goto(0);
+      }
+
+      $.fire(this.input, "awesomplete-open");
+    },
+
+    destroy: function() {
+      //remove events from the input and its form
+      $.unbind(this.input, this._events.input);
+      $.unbind(this.input.form, this._events.form);
+
+      //move the input out of the awesomplete container and remove the container and its children
+      var parentNode = this.container.parentNode;
+
+      parentNode.insertBefore(this.input, this.container);
+      parentNode.removeChild(this.container);
+
+      //remove autocomplete and aria-autocomplete attributes
+      this.input.removeAttribute("autocomplete");
+      this.input.removeAttribute("aria-autocomplete");
+
+      //remove this awesomeplete instance from the global array of instances
+      var indexOfAwesomplete = _.all.indexOf(this);
+
+      if (indexOfAwesomplete !== -1) {
+        _.all.splice(indexOfAwesomplete, 1);
+      }
+    },
+
+    next: function() {
+      var count = this.ul.children.length;
+      this.goto(this.index < count - 1 ? this.index + 1 : (count ? 0 : -1));
+    },
+
+    previous: function() {
+      var count = this.ul.children.length;
+      var pos = this.index - 1;
+
+      this.goto(this.selected && pos !== -1 ? pos : count - 1);
+    },
+
+    // Should not be used, highlights specific item without any checks!
+    goto: function(i) {
+      var lis = this.ul.children;
+
+      if (this.selected) {
+        lis[this.index].setAttribute("aria-selected", "false");
+      }
+
+      this.index = i;
+
+      if (i > -1 && lis.length > 0) {
+        lis[i].setAttribute("aria-selected", "true");
+
+        this.status.textContent = lis[i].textContent + ", list item " + (i + 1) + " of " + lis.length;
+
+        this.input.setAttribute("aria-activedescendant", this.ul.id + "_item_" + this.index);
+
+        // scroll to highlighted element in case parent's height is fixed
+        this.ul.scrollTop = lis[i].offsetTop - this.ul.clientHeight + lis[i].clientHeight;
+
+        $.fire(this.input, "awesomplete-highlight", {
+          text: this.suggestions[this.index]
+        });
+      }
+    },
+
+    select: function(selected, origin) {
+      if (selected) {
+        this.index = $.siblingIndex(selected);
+      } else {
+        selected = this.ul.children[this.index];
+      }
+
+      if (selected) {
+        var suggestion = this.suggestions[this.index];
+
+        var allowed = $.fire(this.input, "awesomplete-select", {
+          text: suggestion,
+          origin: origin || selected
+        });
+
+        if (allowed) {
+          this.replace(suggestion);
+          this.close({
+            reason: "select"
+          });
+          $.fire(this.input, "awesomplete-selectcomplete", {
+            text: suggestion
+          });
+        }
+      }
+    },
+
+    evaluate: function() {
+      var me = this;
+      var value = this.input.value;
+
+      if (value.length >= this.minChars && this._list.length > 0) {
+        this.index = -1;
+        // Populate list with options that match
+        this.ul.innerHTML = "";
+
+        this.suggestions = this._list
+          .map(function(item) {
+            return new Suggestion(me.data(item, value));
+          })
+          .filter(function(item) {
+            return me.filter(item, value);
+          });
+
+        if (this.sort !== false) {
+          this.suggestions = this.suggestions.sort(this.sort);
+        }
+
+        this.suggestions = this.suggestions.slice(0, this.maxItems);
+
+        this.suggestions.forEach(function(text, index) {
+          me.ul.appendChild(me.item(text, value, index));
+        });
+
+        if (this.ul.children.length === 0) {
+
+          this.status.textContent = "No results found";
+
+          this.close({
+            reason: "nomatches"
+          });
+
+        } else {
+          this.open();
+
+          this.status.textContent = this.ul.children.length + " results found";
+        }
+      } else {
+        this.close({
+          reason: "nomatches"
+        });
+
+        this.status.textContent = "No results found";
+      }
+    }
+  };
+
+  // Static methods/properties
+
+  _.all = [];
+
+  _.FILTER_CONTAINS = function(text, input) {
+    return RegExp($.regExpEscape(input.trim()), "i").test(text);
+  };
+
+  _.FILTER_STARTSWITH = function(text, input) {
+    return RegExp("^" + $.regExpEscape(input.trim()), "i").test(text);
+  };
+
+  _.SORT_BYLENGTH = function(a, b) {
+    if (a.length !== b.length) {
+      return a.length - b.length;
+    }
+
+    return a < b ? -1 : 1;
+  };
+
+  _.SORT_BYALPHA = function(a, b) {
+    return a.label.localeCompare(b.label);
+  };
+
+  _.SORT_BYINDEX = function(a, b) {
+    // we need to get a reference to the active/focused instance
+    // 	if more than one on page, to use input.value getter
+    var instance = _.all.length > 1 ?
+      _.all.filter(function(i) {
+        // check focused input against instance input prop
+        return $('input:focus') === i.input;
+      }).pop() : _.all[0],
+      val = instance.val;
+
+    // sort results by indexOf match in string
+    return a.label.indexOf(val) - b.label.indexOf(val);
+  };
+
+  _.ITEM = function(text, input, item_id) {
+    var html = input.trim() === "" ? text : text.replace(RegExp($.regExpEscape(input.trim()), "gi"), "<b>$&</b>");
+    return $.create("li", {
+      innerHTML: html,
+      "aria-selected": "false",
+      "id": "awesomplete_list_" + this.count + "_item_" + item_id,
+      className: "ui-menu-item"
+    });
+  };
+
+  _.REPLACE = function(text) {
+    this.input.value = text.value;
+  };
+
+  _.DATA = function(item /*, input*/ ) {
+    return item;
+  };
+
+  // Private functions
+
+  function Suggestion(data) {
+    var o = Array.isArray(data) ? {
+        label: data[0],
+        value: data[1]
+      } :
+      typeof data === "object" && "label" in data && "value" in data ? data : {
+        label: data,
+        value: data
+      };
+
+    this.label = o.label || o.value;
+    this.value = o.value;
+  }
+  Object.defineProperty(Suggestion.prototype = Object.create(String.prototype), "length", {
+    get: function() {
+      return this.label.length;
+    }
+  });
+  Suggestion.prototype.toString = Suggestion.prototype.valueOf = function() {
+    return "" + this.label;
+  };
+
+  function configure(instance, properties, o) {
+    for (var i in properties) {
+      var initial = properties[i],
+        attrValue = instance.input.getAttribute("data-" + i.toLowerCase());
+
+      if (typeof initial === "number") {
+        instance[i] = parseInt(attrValue);
+      } else if (initial === false) { // Boolean options must be false by default anyway
+        instance[i] = attrValue !== null;
+      } else if (initial instanceof Function) {
+        instance[i] = null;
+      } else {
+        instance[i] = attrValue;
+      }
+
+      if (!instance[i] && instance[i] !== 0) {
+        instance[i] = (i in o) ? o[i] : initial;
+      }
+    }
+  }
+
+  // Helpers
+
+  var slice = Array.prototype.slice;
+
+  function $(expr, con) {
+    return typeof expr === "string" ? (con || document).querySelector(expr) : expr || null;
+  }
+
+  function $$(expr, con) {
+    return slice.call((con || document).querySelectorAll(expr));
+  }
+
+  $.create = function(tag, o) {
+    var element = document.createElement(tag);
+
+    for (var i in o) {
+      var val = o[i];
+
+      if (i === "inside") {
+        $(val).appendChild(element);
+      } else if (i === "around") {
+        var ref = $(val);
+        ref.parentNode.insertBefore(element, ref);
+        element.appendChild(ref);
+      } else if (i in element) {
+        element[i] = val;
+      } else {
+        element.setAttribute(i, val);
+      }
+    }
+
+    return element;
+  };
+
+  $.bind = function(element, o) {
+    if (element) {
+      for (var event in o) {
+        var callback = o[event];
+
+        event.split(/\s+/).forEach(function(event) {
+          element.addEventListener(event, callback);
+        });
+      }
+    }
+  };
+
+  $.unbind = function(element, o) {
+    if (element) {
+      for (var event in o) {
+        var callback = o[event];
+
+        event.split(/\s+/).forEach(function(event) {
+          element.removeEventListener(event, callback);
+        });
+      }
+    }
+  };
+
+  $.fire = function(target, type, properties) {
+    var evt = document.createEvent("HTMLEvents");
+
+    evt.initEvent(type, true, true);
+
+    for (var j in properties) {
+      evt[j] = properties[j];
+    }
+
+    return target.dispatchEvent(evt);
+  };
+
+  $.regExpEscape = function(s) {
+    return s.replace(/[-\\^$*+?.()|[\]{}]/g, "\\$&");
+  };
+
+  $.siblingIndex = function(el) {
+    /* eslint-disable no-cond-assign */
+    for (var i = 0; el = el.previousElementSibling; i++);
+    return i;
+  };
+
+  // Initialization
+
+  function init() {
+    $$("input.awesomplete").forEach(function(input) {
+      new _(input);
+    });
+  }
+
+  // Are we in a browser? Check for Document constructor
+  if (typeof Document !== "undefined") {
+    // DOM already loaded?
+    if (document.readyState !== "loading") {
+      init();
+    } else {
+      // Wait for it
+      document.addEventListener("DOMContentLoaded", init);
+    }
+  }
+
+  _.$ = $;
+  _.$$ = $$;
+
+  // Make sure to export Awesomplete on self when in a browser
+  if (typeof self !== "undefined") {
+    self.Awesomplete = _;
+  }
+
+  // Expose Awesomplete as a CJS module
+  if (typeof module === "object" && module.exports) {
+    module.exports = _;
+  }
+
+  // Expose Awesomplete as a jQuery plugin with
+  // backwards compatibility to jQuery.ui.autocomplete
+  jQuery.fn.awesomplete = function(options) {
+
+    var inputs = this;
+
+    return inputs.each(function() {
+
+      var input = this,
+        ajax = 'function' === typeof options.source,
+        // if list is a source function, just set to empty
+        // array, to be populated after function completes
+        list = ajax ? [] : options.source,
+        // prevent autocomplete trigger on these keycodes:
+        // [Enter, Esc, Left Arrow, Up Arrow, Right Arrow, Down Arrow]
+        noops = [13, 27, 37, 38, 39, 40],
+        val = function() {
+          return input.value;
+        },
+        opts = {
+          minChars: options.minLength,
+          appendTo: options.appendTo instanceof jQuery ? options.appendTo[0] : options.appendTo,
+          autoFirst: options.autoFocus,
+          list: list,
+          sort: /sortindex/.test(window.location.search) ?
+            _.SORT_BYINDEX : _.SORT_BYALPHA
+        },
+        instance = new _(input, opts);
+
+      if (options.select) {
+        $.bind(input, {
+          'awesomplete-selectcomplete': options.select.bind(null, null, {
+            item: input
+          })
+        });
+      }
+
+      if (ajax) {
+        $.bind(input, {
+          keyup: function(e) {
+            if (noops.some(function(key) {
+                return key === e.keyCode;
+              })) {
+              if (e.keyCode === 27) {
+                // clear input on esc key
+                input.value = '';
+              }
+              return false;
+            }
+          },
+          // NOTE: Updated from keyup listener
+          // 	In Firefox Android the key event is not triggered
+          // 	if the key press results in some kind of word
+          // 	suggestion from the keyboard app (?!)
+          input: function(e) {
+            if (val().length < instance.minChars) {
+              instance.close();
+              return false;
+            }
+            options.source({
+              term: val()
+            }, function(list) {
+              instance.list = list.map(function(item) {
+                return item.value ? item : {
+                  label: item.label,
+                  value: item.label
+                };
+              });
+            });
+          }
+        });
+      }
+
+      $.bind(input, {
+        'awesomplete-highlight': function(obj) {
+          input.value = obj.text.label;
+        }
+      });
+
+      return instance;
+
+    });
+
+  };
+
+  return _;
+
+}());
+
+
+/*! GENERIC - EQUALHEIGHT */
+/**
+ *  A jQuery plugin to take a collection of elements and make each element's height
+ *		equal to the tallest element within the same row
+ *		NOTE: If any elements in the collection are hidden or display:none, you will
+ *					need to show these temporarily in order for their height to be considered
+ * 	@function equalHeight
+ *  @requires jQuery
+ * 	@example $('div.differentheights').equalHeight();
+ *	@param {boolean} force - whether to force equal height on all elements,
+ *	                       regardless of offset position
+ * 	@returns {jQuery} collection - The jQuery collection with modified/equalized heights
+ */
+
+(function($) {
+  'use strict';
+
+  jQuery.fn.equalHeight = function(force) {
+
+    var currTallest = 0,
+      currRow = -1,
+      rows = [],
+      count = 0,
+      total = this.length,
+      offset,
+      prevoffset,
+      el,
+      height;
+
+    force = force || false;
+
+    // if only one or no elements in the collection, we can abort
+    if (total <= 1) return this;
+
+    return this.each(function() {
+
+      el = $(this)[0];
+      el.style.height = 'auto';
+      height = el.offsetHeight;
+
+      // if force, only set it once so that all elements are height matched
+      // use jQuery offset to find doc relative position
+      // prevent slight (< 10px) offset differences from aborting
+      if (count === 0 || !force) {
+        offset = parseInt($(el).offset().top / 10, 10);
+      }
+
+      if (offset !== prevoffset) {
+        currRow++;
+        rows[currRow] = {
+          collection: []
+        };
+        prevoffset = offset;
+        // initialize with first element's height
+        currTallest = height;
+      } else {
+        currTallest = height > currTallest ? height : currTallest;
+      }
+      rows[currRow].collection.push(el);
+      rows[currRow].heightMatch = currTallest;
+
+      count++;
+
+      // only run this once after all calcs
+      if (count === total) {
+        rows.forEach(function(row) {
+          if (row.collection.length < 2) return false;
+          row.collection.forEach(function(el) {
+            el.style.height = row.heightMatch + 'px';
+          });
+        });
+      }
+    });
+  };
+}(jQuery));
+
+
+/*! GENERIC - PDITLOCALEMAP */
+
+/* eslint no-unused-vars:0 */
+var PDITLocaleMap = (function($, window) {
+  'use strict';
+
+  var
+    endpoint = '/pdit-locale-map.json',
+    // set expiration of 2 weeks
+    expires = +new Date(+new Date() + 1000 * 60 * 60 * 24 * 14),
+    promise = $.Deferred(),
+    init = false,
+    storageKey = 'pditlocalemap',
+    localeData = getLocalStorage(storageKey);
+
+  function fetchLocaleMapJSON() {
+
+    // if ajax call already initialized, return a reference
+    if (init) {
+      return promise;
+    }
+
+
+    promise =
+      $.getJSON(endpoint)
+      .then(function(data) {
+        return setLocalStorage(storageKey, data);
+      })
+      .fail(function(err) {
+        /* eslint no-console:0 */
+        switch (err.status) {
+          case 200:
+            console.warn('PDITLocaleMap file ' +
+              endpoint + ' found, but with JSON errors');
+            break;
+          default:
+            console.warn('PDITLocaleMap file ' +
+              endpoint + ' error: ' + err.statusText);
+        }
+      });
+
+    // set this immediately, to prevent multiple ajax calls
+    init = true;
+
+    return promise;
+  }
+
+  function generateLookup(data) {
+    localeData = localeData || {};
+    data.forEach(function(loc) {
+      localeData[loc.siteid] = loc;
+    });
+    return localeData;
+  }
+
+  /* globals JSON */
+  function getLocalStorage(key) {
+
+    var storage = JSON.parse(localStorage.getItem(key)),
+      isValid = storage &&
+      !!storage.expires &&
+      storage.expires > +new Date();
+
+    return isValid ? storage : false;
+  }
+
+  function setLocalStorage(key, data) {
+    localeData = generateLookup(data);
+    localeData.expires = expires;
+    localStorage.setItem(key, JSON.stringify(localeData));
+    return localeData;
+  }
+
+  function removeLocalStorage(key) {
+    localeData = null;
+    localStorage.setItem(key, false);
+  }
+
+  function findEntryByKey(obj) {
+    obj = obj || {};
+    return !localeData && [] ||
+      Object.keys(localeData).filter(function(locale) {
+        var match = true;
+        Object.keys(obj).forEach(function(key) {
+          if (localeData[locale][key] !== obj[key]) {
+            match = false;
+          }
+        });
+        // don't include expires prop
+        return locale === 'expires' ? false : match;
+      }).map(function(lkey) {
+        return localeData[lkey];
+      });
+  }
+
+  function groupByKey(key) {
+    return !localeData && {} ||
+      Object.keys(localeData).reduce(function(obj, locale) {
+        if (locale !== 'expires') {
+          obj[localeData[locale][key]] = obj[localeData[locale][key]] || [];
+          obj[localeData[locale][key]].push(localeData[locale]);
+        }
+        return obj;
+      }, {});
+  }
+
+
+  return {
+    /**
+     * Initializes PDITLocaleMap, so that the data can be set to a local
+     * 	lookup hash object to get English country name, localized country name,
+     * 	country code, region name from a given siteid key.
+     * 	Initialization fetches external wordmap data (once)
+     * 	via ajax if there is no localStorage locale data, and stores
+     * 	returned locale data in localStorage for improved	performance.
+     * @class PDITLocaleMap.init
+     * @returns {Promise} a chainable $.Deferred object
+     * @requires jQuery
+     * @example
+     *  <caption><b>NOTE:</b> Because the locale data may require an ajax call, you must use a Promise callback to know when the data is available.  If the locale data is found in localStorage the promise will resolve immediately.</caption>
+     *  var myLocaleData;
+     *
+     *  PDITLocaleMap.init().then(function(data) {
+     *  	myLocaleData = data;
+     *  	...other callbacks that will use myLocaleData...
+     *  })
+     */
+    init: function() {
+      return (localeData && $.Deferred().resolve(localeData)) || fetchLocaleMapJSON();
+    },
+    /**
+     * Convenience function for searching pdit-locale data by a key other than siteid
+     * (to get related data by siteid, just initialize to a local variable and
+     * 	reference by <code>myLocaleData[siteid]</code>).
+     * @class PDITLocaleMap.find
+     * @param {object} obj - an object with key: value pairs to match locale data entries against
+     * @returns {array} an array of matching entries, or empty array if no matches are found
+     * @requires jQuery
+     * @example
+     *  <caption><b>NOTE:</b> Because the locale data may require an ajax call, you must use a Promise callback to know when the data is available.  If the locale data is found in localStorage the promise will resolve immediately.</caption>
+     *  var myLocaleArr;
+     *
+     *  PDITLocaleMap.init().then(function(data) {
+     *  	myLocaleArr = PDITLocaleMap.find({ region: 'europe' });
+     *  	...other callbacks that will use myLocaleArr...
+     *  })
+     */
+    find: findEntryByKey,
+    /**
+     * Convenience function for creating a lookup object of locales grouped by a key
+     * 	passed as a parameter.  Typical usage would be to group by 'region' or 'regionname'.
+     * @class PDITLocaleMap.group
+     * @param {string} key - the property by which to group the locales
+     * @returns {object} a lookup object with the unique values of the provided key, each containing an array of locales
+     * @requires jQuery
+     * @example
+     *  <caption><b>NOTE:</b> Because the locale data may require an ajax call, you must use a Promise callback to know when the data is available.  If the locale data is found in localStorage the promise will resolve immediately.</caption>
+     *  var myLocaleGroups;
+     *
+     *  PDITLocaleMap.init().then(function(data) {
+     *  	myLocaleGroups = PDITLocaleMap.group('region');
+     *  	...other callbacks that will use myLocaleGroups...
+     *  })
+     */
+    group: groupByKey
+
+  };
+
+})(jQuery, window);
+
+
+/*! GENERIC - PREPARE HEIGHT TRANSITION */
+/**
+ *  A jQuery plugin to calculate and store height:auto value in px for
+ *     animating height with CSS transition, with recalculate on window resize
+ *  @function prepareHeightTransition
+ * 	@example <caption>JavaScript</caption>
+ *	$('.transitionHeight').prepareHeightTransition('ex01');
+ * 	@example <caption>CSS</caption>
+ *	.transitionHeight {
+ *		--fullHeight:auto;
+ *		height:0;
+ *		transition: height 0.4s linear;
+ *	}
+ *	.transitionHeight.open {
+ *		height:auto; // <--- FALLBACK
+ *		height:var(--fullHeight);
+ *	}
+ *  @requires jQuery
+ * 	@returns {jQuery} collection - The passed in jQuery collection
+ *     to allow for method chaining
+ */
+(function($) {
+  'use strict';
+
+  jQuery.fn.prepareHeightTransition = function() {
+
+    return this.each(function() {
+
+      var $el = $(this),
+        rehide = false,
+        hgt,
+        resizeTimeout;
+
+      // forcing a unique namespace seems to fix the resize problem, also not allowing for custom namespaces
+      var namespace = $el.data('phnamespace') ||
+        (Math.floor(Math.random() * 10000000) + '-' + Math.floor(Math.random() * 100000));
+
+      $el.data('phnamespace', namespace);
+
+      $(window).off('resize.' + namespace).on('resize.' + namespace, function(e) {
+        // only run once resizing is done
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function() {
+          $el.prepareHeightTransition();
+        }, 500);
+        return false;
+      });
+
+      // if the element is hidden because of a parent, we have to unhide the parent
+      // for a moment to be able to calculate auto height
+      if ($el.is(':hidden')) {
+        rehide = true;
+        // use show to display initial default value
+        $el.parentsUntil('section', ':hidden').addClass('heightprep').show();
+      }
+
+      // get the calculated auto height
+      // need to make sure any transitions don't delay height calc
+      $el[0].style.transitionDuration = '0ms';
+      $el[0].style.height = 'auto';
+      hgt = window.getComputedStyle($el[0], null).height;
+
+      // set css variable for referencing in open class
+      $el[0].style.setProperty('--fullHeight', hgt);
+
+      // set a class for referencing/re-calling from other code: $('.oheight')
+      $el.addClass('oheight');
+
+      // unset the inline styles
+      $el[0].style.height = '';
+      $el[0].style.transitionDuration = '';
+
+      if (rehide) {
+        $el.parentsUntil('section', '.heightprep').removeClass('heightprep').css('display', '');
+      }
+    });
+  };
+}(jQuery));
+
+
+// COMPONENTS
+
+/*! U02 */
+/* eslint no-unused-vars:0 */
+
+(function($, window) {
+  'use strict';
+
+  var CLS_OCOMBASE = 'ocom-base',
+    CLS_RESPONSIVE = 'ocom-responsive',
+    CLS_SMAP = 'u02smap',
+    CLS_NAV = 'u02nav',
+    CLS_LOCALNAV = 'u02v1',
+    CLS_LOCALW2 = 'u02w2',
+    CLS_LOCALW3 = 'u02w3',
+    CLS_SHOW = 'u02show',
+    CLS_INIT = 'u02init',
+    CLS_DTOP = 'u02dtop',
+    CLS_TAB = 'u02tab',
+    CLS_MOBILE = 'u02mobi',
+    CLS_TABNAV = 'u02tabnav',
+    CLS_MENULINK = 'u02menulink',
+    CLS_CONTENT = 'u02menucontent',
+    CLS_MLINK = 'u02mlink',
+    CLS_MAINMENU = 'u02mainmenu',
+    CLS_MEGAMENU = 'u02megamenu',
+    CLS_MEGACTR = 'u02megactr',
+    CLS_SKIPOPEN = 'u02skipo',
+    CLS_LOGO = 'u02logo',
+    CLS_LOCLABEL = 'u02local',
+    CLS_LOGOW2 = 'u02logow2',
+    CLS_NOSPLIT = 'u02noflyout',
+    CLS_TOOLS = 'u02tools',
+    CLS_NOTOOLS = 'u02notools',
+    CLS_TOOLPOP = 'u02toolpop',
+    CLS_MTOOL = 'u02mtool',
+    CLS_TICON = 'u02ticon',
+    CLS_NOOVERRIDE = 'u02nooverride',
+    CLS_LOGGEDOUT = 'u02toolsloggedout',
+    CLS_LOGGEDIN = 'u02toolsloggedin',
+    CLS_USER = 'u02userinfo',
+    CLS_USERDATA = 'u02userdata',
+    CLS_ULINK = 'u02ulink',
+    CLS_CMENU = 'u02countrymenu',
+    CLS_REGN = 'u02regn',
+    CLS_CURREGN = 'u02currentcr',
+    CLS_DEFLTREGN = 'u02currentdr',
+    CLS_CURRCTRY = 'u02currentcc',
+    CLS_CMENUL1 = 'u02cmenu-l1',
+    CLS_CMENUL2 = 'u02cmenu-l2',
+    CLS_CMENUCOL = 'u02cmenuc1',
+    CLS_CMENU3COL = 'u02cm3cols',
+    CLS_CLINK = 'u02clink',
+    CLS_CMENUPOP = 'u02cmenupop',
+    CLS_CONTACT = 'u02contact',
+    CLS_CTMENU = 'u02contactmenu',
+    CLS_MENUWRAP = 'u02menuwrap',
+    CLS_EQHEIGHT = 'u02mheight',
+    CLS_BTTNS = 'u02bttns',
+    CLS_HASBTTNS = 'u02hasbttns',
+    CLS_DROPDOWN = 'u02dropdown',
+    CLS_HASMENU = 'u02menu-hasm',
+    CLS_NOMENU = 'u02menu-nomn',
+    CLS_NOSUBMENU = 'u02nosub',
+    CLS_MENUL1 = 'u02menu-l1',
+    CLS_MENUL2 = 'u02menu-l2',
+    CLS_MENUL3 = 'u02menu-l3',
+    CLS_MENUUL = 'u02menu-ul',
+    CLS_MENULI = 'u02menu-li',
+    CLS_POINTER = 'u02menu-l1z1',
+    CLS_OFFSTATE = 'u02z86d',
+    CLS_MORE = 'u02more',
+    CLS_MORELIST = 'u02morelist',
+    CLS_PADDED = 'u02padded',
+    CLS_BACK = 'u02menuback',
+    CLS_OPEN = 'u02opened',
+    CLS_CLOSE = 'u02closing',
+    CLS_CLICKOPEN = 'u02clickopen',
+    CLS_STAYOPEN = 'u02stayopen',
+    CLS_L2OPEN = 'u02l2open',
+    CLS_L3OPEN = 'u02l3open',
+    CLS_HIDE = 'u02hidefast',
+    CLS_HIDEMENU = 'u02hidemenu',
+    CLS_TLINK = 'u02tlink',
+    CLS_BLINK = 'u02blink',
+    CLS_XLINK = 'u02xlink',
+    CLS_HLINK = 'u02hlink',
+    CLS_RTL = 'rtl',
+    CLS_SEARCH = 'u02search',
+    CLS_SEARCHPOP = 'u02searchpop',
+    CLS_SEARCHFORM = 'u02searchform',
+    CLS_SEARCHBTTN = 'u02searchbttn',
+    CLS_FOCUS = 'sfocus',
+    CLS_ERROR = 'serror',
+    CLS_NOHOVER = 'u02nohover',
+    INPUT_SEARCH = 'input#txtSearch',
+    HTML_POINTER = '<div class="' + CLS_POINTER + '"><i></i></div>',
+    DATA_TFWD = 'tfwd',
+    DATA_CLONED = 'u02bttncloned',
+    EV_MOUSEIN = 'mouseenter',
+    EV_MOUSEOUT = 'mouseleave',
+    EV_POINTOVER = 'pointerover',
+    EV_POINTDOWN = 'pointerdown',
+    EV_CLICK = 'click',
+    EV_KEYDOWN = 'keydown',
+    EV_TOUCH = 'touchend',
+    EV_TOUCHST = 'touchstart',
+    EV_FOCUS = 'focus',
+    EV_BLUR = 'blur',
+    EV_SUBMIT = 'submit',
+    EV_RESIZE = 'resize',
+    EV_ORIENT = 'orientationchange',
+    EV_READY = 'u02ready',
+    EV_MENUOPEN = 'u02menuopen',
+    EV_MENUCLOSE = 'u02menuclose',
+    EV_GLOBALRS = [],
+    NS_U02 = 'u02',
+    NS_MOREMENU = 'moremenu',
+    winW = 0,
+    navType = '',
+    IS_TOUCH = 'ontouchstart' in window,
+    IS_RTL, // must initialize after document ready
+    classList = function(arr) {
+      return (Array.isArray(arr) && arr.filter(function(cls) {
+        // remove any false refs
+        return !!cls;
+      }).join(' ')) || arr;
+    },
+    eventList = function(arr, namespc) {
+      var ns = namespc || '';
+      return classList(
+        (Array.isArray(arr) &&
+          arr.map(function(ev) {
+            return [ev, ns].join('.');
+          })) || [arr, ns].join('.') ||
+        arr
+      );
+    },
+    classSelector = function(arr, mod) {
+
+      return (Array.isArray(arr) &&
+          arr.map(function(cls) {
+            return (Array.isArray(mod) &&
+                mod.map(function(m) {
+                  return (Array.isArray(cls) &&
+                      '.' + cls.join(m + ' .') + m) ||
+                    '.' + cls + m;
+                }).join()) ||
+
+              (Array.isArray(cls) &&
+                '.' + cls.join(' .') + (mod || '')) ||
+
+              '.' + cls + (mod || '');
+          }).join()) ||
+
+        (Array.isArray(mod) &&
+          mod.map(function(m) {
+            return '.' + arr + m;
+          }).join()) ||
+
+        '.' + arr + (mod || '');
+    },
+    createElement = function(tag, clsArr, attrObj) {
+      var el = document.createElement(tag);
+      clsArr = clsArr || [];
+      clsArr = Array.isArray(clsArr) ? clsArr : [clsArr];
+      attrObj = attrObj || {};
+      Object.keys(attrObj).map(function(key) {
+        el[key] = attrObj[key];
+      });
+      return $(el).addClass(classList(clsArr));
+    };
+
+  /**
+   * Adds tabindex attribute and removes aria-hidden from descendant <a> tags
+   * 	of the provided open submenu root that have a computed visibility of visible.
+   * 	This passed in parameter should be a boolean check whether to do this,
+   * 	since it is an expensive style calculation...
+   */
+  jQuery.fn.addAriaAttributes = function(needsAria) {
+    return needsAria && this.each(function() {
+      var $target = $(this);
+      $target.find('a').get().forEach(function(a) {
+        var link = a;
+        window.requestAnimationFrame(
+          function() {
+            if (window.getComputedStyle(link, null).visibility === 'visible') {
+              link.removeAttribute('aria-hidden');
+              link.setAttribute('tabindex', 0);
+            }
+          });
+      });
+    }) || this;
+  };
+
+  /**
+   * Removes tabindex attribute and adds aria-hidden for *all*
+   * 	descendant <a> tags that have a computed visibility of hidden.
+   * 	This passed in parameter should be a boolean check whether to do this,
+   * 	since it is an expensive style calculation...
+   */
+  jQuery.fn.removeAriaAttributes = function(needsAria) {
+    return needsAria && this.each(function() {
+      var $target = $(this);
+      $target.find('a').get().forEach(function(a) {
+        var link = a;
+        window.requestAnimationFrame(
+          function() {
+            if (window.getComputedStyle(link, null).visibility === 'hidden') {
+              link.setAttribute('aria-hidden', true);
+              link.setAttribute('tabindex', -1);
+            }
+          });
+      });
+    }) || this;
+  };
+
+  /**
+   * Creates a progressive flyout menu within the provided
+   *  nav container.
+   *
+   *  Expects a structure like:
+   *    *container*
+   *      > div.u02menu-l1
+   *        > ul
+   *          > li [x number of menu items]
+   *            > a
+   *            > div.u02menul1 [if submenu]
+   *              > ul
+   *                > li [x number of menu items]
+   *                  > a
+   *                  > div.u02menul2 [if submenu]
+   *                    > ul
+   *                      > li [x number of menu items]
+   *                        > a
+   *                        > div.u02menul3 [if submenu]
+   *                          > ul
+   *                            > li
+   *                              > a
+   */
+  jQuery.fn.FlyoutMenu = function() {
+
+    return this.each(function() {
+
+      var $menu = $(this);
+
+      $menu.find(classSelector([CLS_MENUL1, CLS_MENUL2, CLS_MENUL3]))
+        .addClass(classList([CLS_MENUWRAP, CLS_EQHEIGHT]));
+      $menu.find(classSelector([CLS_MENUL2, CLS_MENUL3]))
+        .closest('li').addClass(CLS_HASMENU);
+
+      $menu.find('li').each(function() {
+        var $li = $(this),
+          btxt;
+
+        if ($li.hasClass(CLS_HASMENU)) {
+          btxt = $li.children(classSelector(CLS_TLINK)).text();
+          // clone submenu headings that are outbound links
+          $li.children(classSelector(CLS_TLINK)).each(function() {
+            return !/#open$/.test(this.href) &&
+              $(this).clone()
+              .prependTo($li.find('ul').first())
+              .removeClass(CLS_TLINK).addClass(classList([CLS_XLINK, CLS_HLINK]))
+              .wrap(createElement('li', CLS_NOSUBMENU)) || 1;
+          });
+          $li.find('ul').first()
+            .prepend(createElement('li', [CLS_BACK, CLS_NOSUBMENU])
+              .html(createElement('a', CLS_BLINK, {
+                href: '#back'
+              }).text(btxt)));
+        } else {
+          $li.addClass(CLS_NOSUBMENU);
+        }
+      });
+
+      $menu.find(classSelector([CLS_MENUL1, CLS_MENUL2, CLS_MENUL3], ' > ul')).each(function() {
+
+        var $ul = $(this).addClass(CLS_MENUUL);
+
+        $ul.children('li').each(function() {
+
+          var $li = $(this).addClass(CLS_MENULI);
+
+          return ((!$li.find('a').closest('li').hasClass(CLS_HASMENU) &&
+              !$li.find(classSelector(CLS_BLINK))[0]) &&
+            $li.find('a').removeClass(CLS_TLINK).addClass(CLS_XLINK)) || 1;
+        });
+      });
+
+      $menu.find(classSelector(CLS_MENUL1), ' > ul > li').each(function() {
+        var $li = $(this);
+
+        return (!$li.hasClass(CLS_HASMENU) &&
+          $li.addClass(CLS_NOMENU)
+          .children('a').removeClass(CLS_TLINK).addClass(CLS_XLINK)) || 1;
+      });
+
+    });
+  };
+
+  /**
+   * Utility function to position a direct
+   * 	submenu container, when that container extends beyond
+   * 	the bounds of the viewport (its parent <nav>).
+   * 	Used by jQuery.fn.MoreMenu upon initialization (page load)
+   * 	 and called after the window.resize event for recalc
+   */
+  jQuery.fn.menuShift = function(lvl1, lvl2, notL1, moveTgt) {
+
+    if (!this.length) {
+      return this;
+    }
+
+    var $ctr = this.closest('.u02w1'),
+      netW = $(window).width(),
+      bounds = $ctr[0].getBoundingClientRect(),
+      calcShift = function($el) {
+        var rect = $el[0].getBoundingClientRect();
+        return (rect.left < bounds.left && Math.abs(bounds.left - rect.left)) ||
+          (rect.right > bounds.right && Math.abs(bounds.right - rect.right)) ||
+          0;
+      },
+      DATA_XSHIFT = 'xshift';
+
+    lvl1 = lvl1 || CLS_MENUL2;
+    lvl2 = lvl2 || CLS_MENUL3;
+    notL1 = notL1 || CLS_MORELIST;
+    moveTgt = moveTgt || false;
+
+    return this.each(function() {
+
+      var $target = $(this),
+        $menu1,
+        $menu2,
+        $offMenu,
+        $moveMenu,
+        shiftProp,
+        shiftVal,
+        widthVal;
+
+      // unset any existing styles before running
+      $target.find(classSelector(lvl1)).addBack().each(function() {
+        var $el = $(this);
+        if ($el.data(DATA_XSHIFT)) {
+          $el.css($el.data(DATA_XSHIFT), '')
+            .css('width', '');
+        }
+      });
+
+      $menu1 = $target.children(classSelector(lvl1));
+      // use u02menu-l3 in calc only if we are not within the more menu
+      // and if not mobile
+      $menu2 = !$menu1.closest(classSelector(notL1)).length &&
+        (navType !== 'MOBI') &&
+        $menu1.find(classSelector(lvl2)).first();
+
+      // assign which menu is used for the calc - set to false if no shift needed
+      $offMenu = ($target.length && calcShift($target) !== 0 && $target) ||
+        ($menu1.length && calcShift($menu1) !== 0 && $menu1) ||
+        ($menu2.length && calcShift($menu2) !== 0 && $menu2);
+      $moveMenu = (moveTgt && $target) || $menu1;
+
+      if ($offMenu && $offMenu.length) {
+
+        // run this on the next frame to make sure
+        // 	unset styles have been recalc'd and applied
+        window.requestAnimationFrame(function() {
+
+          if ($moveMenu.outerWidth() > netW) {
+            $moveMenu.width(netW);
+          }
+
+          shiftProp = IS_RTL ? 'right' : 'left';
+          shiftVal = calcShift($offMenu);
+
+          // add the transform, store a ref to prop to unset on next call
+          $moveMenu.css(shiftProp, ['-=', shiftVal, 'px'].join(''))
+            .data(DATA_XSHIFT, shiftProp);
+
+          widthVal = calcShift($moveMenu);
+
+          if (widthVal !== 0) {
+            $moveMenu.css('width', ['-=', widthVal, 'px'].join(''));
+          }
+
+          // force global resize handlers to run to correct
+          // 	wrongly assigned dtop/mobi classes when content
+          // 	was overflowing the window
+          EV_GLOBALRS.forEach(function(ev) {
+            setTimeout($(window).triggerHandler.bind($(window), ev), 0);
+          });
+
+        });
+      }
+    });
+  };
+
+  /**
+   * Creates a tab menu within the provided container, with a 'More' dropdown
+   *  for top level items that cannot fit within the container's width
+   *
+   *  Expects an existing structure on page
+   *    (must be injected if fetched by ajax)
+   *  nav
+   *    .u02w2 (can be nested deeper, eg. within u02w1)
+   *      *container*
+   *        div.u02menu-l1
+   *          > ul
+   *            > li [x number of menu items]
+   *              > a
+   *              > div.u02menul1 [if submenu]
+   *                > ul
+   *                  > li [x number of menu items]
+   *                    > a
+   *                    > div.u02menul2 [if submenu]
+   *                      > ul
+   *                        > li [x number of menu items]
+   *                          > a
+   *                          > div.u02menul3 [if submenu]
+   *                            > ul
+   *                              > li
+   *                                > a
+   *    .u02w3 (generated if not included in markup)
+   */
+  jQuery.fn.MoreMenu = function() {
+
+    return this.each(function(i) {
+
+      var $ctr = $(this),
+        $u02w2 = $ctr.closest(classSelector(CLS_LOCALW2)),
+        $u02 = $ctr.closest('.u02'),
+        $nav = $ctr.closest(classSelector(CLS_NAV)),
+        TXT_MORE = $nav.data('moretxt') || 'More',
+        $listCtr = $ctr.find(classSelector(CLS_MENUL1, ' > ul')),
+        $btnCtr = ($nav.find('.u02w3').length && $nav.find('.u02w3')) ||
+        createElement('div', 'u02w3').appendTo($nav.find('.u02w1')),
+        $listItems = function() {
+          return $listCtr.find('> li').not(classSelector(CLS_MORE));
+        },
+        $moreCtr = createElement('li', [CLS_MORE, CLS_MENULI, CLS_HASMENU, $nav.find(classSelector(CLS_MEGAMENU)).length && CLS_MEGAMENU])
+        .html(createElement('a', CLS_TLINK, {
+          href: '#open'
+        }).text(TXT_MORE))
+        .appendTo($listCtr),
+        $moreMenu = createElement('div', [CLS_MORELIST, CLS_MENUL2, CLS_MENUWRAP, CLS_EQHEIGHT])
+        .append(createElement('ul', CLS_MENUUL))
+        .appendTo($moreCtr).find(classSelector(CLS_MENUUL)),
+        moreArr = [],
+        working = false,
+        resizeTimeout;
+
+      function setupPointer() {
+
+        var $pointer = $ctr.find(classSelector(CLS_POINTER)).length ?
+          $ctr.find(classSelector(CLS_POINTER)) :
+          $(HTML_POINTER);
+        // move flyout pointer to u02menu-l2, since u02menu-l1
+        //  contains top-level links
+        $pointer.insertBefore($ctr.find(classSelector(CLS_MENUL2)));
+      }
+
+      function setupTabs($items) {
+        // adds a data-sort attribute to ensure we can keep
+        // the same order when adding/removing from more menu
+        return $items.each(function(i) {
+          $(this).data({
+            sort: i,
+            reqwidth: $(this).outerWidth()
+          });
+        });
+      }
+
+      function sortFn(a, b) {
+        return $(a).data('sort') - $(b).data('sort');
+      }
+
+      function onWindowResized(e) {
+        return !working && (working = true) &&
+          window.requestAnimationFrame(handleMoreMenu);
+      }
+
+      function handleMoreMenu() {
+
+        // make sure more menu padding is in place
+        padListItemCtr();
+
+        // first add back any items that will fit
+        addBackItems();
+
+        // check for items which have wrapped due to not enough space
+        $listItems().each(handleListItem);
+
+        // append items to more menu, sorted in the order they appeared
+        $moreMenu.append(moreArr.sort(sortFn))
+          // change behavior of .u02menu-hasm to open/close on click only
+          // 	or if megamenu style, set it to always be open
+          .find(classSelector(CLS_HASMENU))
+          .addClass(function() {
+            return classList([
+              CLS_CLICKOPEN,
+              $(this).hasClass(CLS_MEGAMENU) && CLS_STAYOPEN
+            ]);
+          });
+
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(shiftMenu, 100);
+
+        // toggle visibility of the more menu, unset flag
+        return toggleMore() &&
+          (working = false) &&
+          $listItems().addAriaAttributes($u02.hasClass(CLS_TABNAV)) &&
+          $moreMenu.removeAriaAttributes($u02.hasClass(CLS_TABNAV));
+      }
+
+      function addBackItems() {
+        var $item;
+        // if item fits in first row, we remove from moreArr, add back to list items
+        while (moreArr.length && getAvailableWidth() >= $(moreArr[0]).data('reqwidth')) {
+          $item = $(moreArr.shift());
+          $item
+            .find(classSelector([CLS_CLICKOPEN, CLS_STAYOPEN])).addBack()
+            .removeClass(classList([CLS_CLICKOPEN, CLS_STAYOPEN]));
+          $moreCtr.before($item);
+        }
+      }
+
+      function handleListItem(i, el) {
+        // if item has wrapped to second row,
+        // we add to moreArr, if not there already
+        return (el.offsetTop > 0 &&
+            moreArr.indexOf(el) < 0 &&
+            moreArr.unshift(el)) ||
+          // otherwise return true to prevent .each short-circuit
+          true;
+      }
+
+      function shiftMenu() {
+        return $listItems().add(classSelector(CLS_MORE)).menuShift();
+      }
+
+      function toggleMore() {
+        return $moreCtr.toggleClass(CLS_SHOW, !!moreArr.length);
+      }
+
+      function padListItemCtr() {
+        return ($listCtr[0].style[(IS_RTL ? 'paddingLeft' : 'paddingRight')] = getPadW());
+      }
+
+      function getAvailableWidth() {
+        // returns the available space between edge of the list container <ul>
+        // and its parent container
+        return $u02w2[0].offsetWidth - $listCtr[0].offsetWidth;
+      }
+
+      function getPadW() {
+        return $moreCtr.find('> a').outerWidth() + 'px';
+      }
+
+      setupPointer();
+      setupTabs($listItems());
+      handleMoreMenu();
+
+      $(window).off(eventList([EV_RESIZE, EV_ORIENT], [NS_U02, NS_MOREMENU, i].join('-')))
+        .on(eventList([EV_RESIZE, EV_ORIENT], [NS_U02, NS_MOREMENU, i].join('-')), onWindowResized);
+
+    });
+  };
+
+  /**
+   * Creates a megamenu within the provided container, by adding the needed
+   * 	container class, specifying which submenus need equal height and
+   * 	positioning and sizing the container with menuShift
+   *
+   *  Expects a structure
+   *  *container* li.u02megamenu or div.u02mlink if top-level, single-panel
+   *      div.u02menu-l[n]
+   *        > ul
+   *          > li [x number of menu items]
+   *            > a
+   *            > div.u02menul[n+1] [if submenu]
+   *              > ul
+   *                > li [x number of menu items]
+   *                  > a
+   */
+  jQuery.fn.MegaMenu = function() {
+
+    return this.each(function() {
+
+      var $ctr = $(this),
+        $menuctr = $ctr.children(classSelector([CLS_CONTENT, CLS_MENUL2, CLS_MENUL3]));
+
+      function setupPointer() {
+        // remove any other added pointers and put one before
+        // 	the menucontent container
+        return $ctr.find(classSelector(CLS_POINTER)).remove() &&
+          $menuctr.before(HTML_POINTER) &&
+          // 	add a class to set flex-basis to position pointer correctly
+          $ctr.closest(classSelector(CLS_LOCALW2)).length &&
+          $ctr.closest(classSelector(CLS_LOCALW2)).addClass(CLS_MEGACTR);
+      }
+
+      setupPointer();
+
+      $ctr.closest(classSelector(CLS_MEGACTR))
+        .find(classSelector([CLS_MENUL1, CLS_MENUL2, CLS_MENUL3]))
+        .addClass(CLS_EQHEIGHT);
+
+      $menuctr.menuShift(null, null, null, true);
+
+    });
+  };
+
+  jQuery.fn.focusOnFirstItem = function () {
+    $(this).find('.u02mainmenu').find('a').first().focus();
+  };
+
+  jQuery.fn.focusOnFirstAccounItem = function () {
+    if ($(this).hasClass(CLS_LOGGEDOUT)) {
+      $(this).find(".u02userloggedout").find("a").first().focus();
+    } else if ($(this).hasClass(CLS_LOGGEDIN)) {
+      $(this).find(".u02userloggedin").find("a").first().focus();
+    } else {
+      $(this).find(".u02cmenu-simple").find("a").first().focus();
+    }
+  }
+
+  /**
+   * Provides a method for opening child menu of the target element
+   * 	and controlling the parent menu item for what level is open.
+   * 	Registers one time handlers for closing menu.
+   */
+  jQuery.fn.openMenu = function() {
+
+    return this.each(function() {
+
+      var $target = $(this),
+        $top = $target.parents(classSelector(CLS_OPEN)).last(),
+        $u02 = $target.closest(classSelector(NS_U02)),
+        $nav = $target.closest(classSelector(CLS_NAV)),
+        cleanupOnLeave = !IS_TOUCH &&
+        !$u02.hasClass(CLS_MOBILE) &&
+        // no cleanup on megamenu deep submenus
+        !$target.closest(classSelector(
+          [CLS_MEGAMENU, [CLS_MEGAMENU, CLS_MENUL2]]
+        )).not(classSelector(CLS_MLINK)).length &&
+        !$target.hasClass(CLS_CLICKOPEN);
+
+      $target
+        .removeClass(CLS_CLOSE)
+        .addClass(CLS_OPEN)
+        .addAriaAttributes($u02.hasClass(CLS_TABNAV))
+        .off(eventList(EV_MOUSEOUT, NS_U02))
+        .one(eventList(EV_MOUSEOUT, NS_U02),
+          (cleanupOnLeave && $target.closeMenu.bind($target)) || null);
+
+      $target.siblings(classSelector(CLS_HASMENU)).not($target)
+        // prevents double-open bug in mobile
+        // 	(tapping sibling link while submenu is opening)
+        // 	by turning off pointer-events during transition
+        .addClass(classList([CLS_CLOSE, $u02.hasClass(CLS_MOBILE) && CLS_NOHOVER]))
+        .each(function() {
+          var $link = $(this);
+          return $link
+            .data('closeTimeout',
+              setTimeout($link.removeClass.bind($link, CLS_CLOSE), 400)) &&
+            $u02.hasClass(CLS_MOBILE) &&
+            $link.data('nohoverTimeout',
+              setTimeout($link.removeClass.bind($link, CLS_NOHOVER), 300)) ||
+            this;
+        })
+        .find(classSelector([CLS_OPEN, CLS_L2OPEN, CLS_L3OPEN])).addBack()
+        .removeClass(classList([CLS_OPEN, CLS_L2OPEN, CLS_L3OPEN]));
+
+      $top
+        .addClass(function() {
+          return $(this).hasClass(CLS_L2OPEN) && CLS_L3OPEN || CLS_L2OPEN;
+        });
+
+      $target.trigger(EV_MENUOPEN);
+    });
+  };
+
+  /**
+   * Provides a method for closing menus within the target element
+   * 	or close all that can be called on the top level <nav>
+   */
+  jQuery.fn.closeMenu = function() {
+
+    return this.each(function() {
+
+      var $target = $(this),
+        $top = $target.parents(classSelector(CLS_OPEN)).last(),
+        $u02 = $target.closest(classSelector(NS_U02)),
+        openClasses = [CLS_OPEN, CLS_HIDEMENU, CLS_L2OPEN, CLS_L3OPEN];
+
+      if ($target.hasClass(CLS_NAV)) {
+
+        $target.find(classSelector(openClasses))
+          .removeClass(classList(openClasses)).end()
+          .find(classSelector([
+            [CLS_CMENUPOP, CLS_SHOW]
+          ]))
+          .removeClass(CLS_SHOW).end()
+          .prev(classSelector(CLS_OFFSTATE))
+          .removeClass(CLS_SHOW)
+          .off(eventList([
+            EV_MOUSEIN,
+            EV_TOUCH,
+            EV_CLICK
+          ], NS_U02)).end()
+          .removeAriaAttributes($u02.hasClass(CLS_TABNAV))
+          // kill listener for menuopen for badge flyout
+          .off(eventList(EV_MENUOPEN, [NS_U02, 'badge'].join('-')));
+
+      } else {
+
+        $target
+          .addClass(CLS_CLOSE)
+          .data('closeTimeout',
+            setTimeout($target.removeClass.bind($target, CLS_CLOSE), 400))
+          .removeClass(classList([CLS_OPEN, CLS_L2OPEN, CLS_L3OPEN]))
+          .removeAriaAttributes($u02.hasClass(CLS_TABNAV))
+          .find(classSelector(CLS_OPEN)).removeClass(CLS_OPEN).end()
+          .find('a').blur();
+
+        $top.removeClass(function() {
+          return $(this).hasClass(CLS_L3OPEN) && CLS_L3OPEN || CLS_L2OPEN;
+        });
+
+        if (!$target.closest(classSelector(CLS_OPEN)).length) {
+          $target.closest(classSelector(CLS_NAV))
+            .prev(classSelector(CLS_OFFSTATE))
+            .removeClass(CLS_SHOW);
+        }
+
+      }
+
+      $target.trigger(EV_MENUCLOSE);
+
+    });
+  };
+
+  /**
+   * Main initialization of U02 nav, both U02v0 (global nav)
+   * 	and U02v1 (local nav).  Returns a closure to scope all
+   * 	element selectors and event handlers to the initialized
+   * 	nav container.
+   * @param  {jQuery} $ctr  - the <nav> element (top level container)
+   * @param  {number} index - numeric index, eg. from jQuery.each(function(index) { })
+   */
+  function init($ctr, index) {
+
+    index = index || 0;
+
+    return (function() {
+
+      var $nav = $ctr,
+        $u02 = $nav.find('> .u02'),
+        $u02m = $u02.find(classSelector(CLS_MLINK)),
+        $others = $(classSelector(CLS_NAV)).not($nav),
+        isGlobal = !$u02.hasClass(CLS_LOCALNAV),
+        // provides unique namespacing for all
+        // 	event handlers
+        evList = function(arr, namespc) {
+          var ns = [NS_U02, index];
+          if (namespc) {
+            ns.push(namespc);
+          }
+          ns = ns.join('-');
+          return eventList.call(null, arr, ns);
+        },
+        contentCache = {},
+        menucontent,
+        cmenucontent,
+        ctmenucontent,
+        // window width reference
+        wcheck = 0,
+        // window scroll reference
+        wscroll = 0,
+        // flag for debouncing main resize handler
+        u02working = false,
+        // flag for short circuiting tool switch
+        hasClosed = false,
+        // setTimeout ref for debouncing equalHeight fn
+        resizeTimeout;
+
+      // checks if either .u02nav or ancestor (body) has class .rtl
+      IS_RTL = $nav.add($others).closest(classSelector(CLS_RTL)).length;
+
+      // menu content is either a link to external site map or
+      // can be included in the markup
+      menucontent = ($u02m.length && 
+          $u02m.find(['a#u02menulink', classSelector(CLS_MENULINK)].join())
+          .first().attr('href')) ||
+        $u02.find(classSelector(CLS_CONTENT)).parent();
+
+      cmenucontent = isGlobal &&
+        $u02.find('a' + classSelector(CLS_REGN)).attr('href');
+
+      ctmenucontent = isGlobal &&
+        $u02.find('a' + classSelector(CLS_CONTACT)).attr('href');
+
+      $nav.before(createElement('div', CLS_OFFSTATE));
+
+      $u02.data(DATA_TFWD, true);
+
+      // store a reference to the nav resize events,
+      // 	to call after menu shift of local nav and toolpops
+      // 	addresses race condition of overflow content that
+      // 	gives an incorrect window.innerWidth
+      // 	which can cause incorrectly set dtop/mobi classes
+      EV_GLOBALRS.push(evList(EV_RESIZE));
+
+      if (isGlobal) {
+
+        // hamburger markup, toolpop pointers
+        addIconMarkup();
+
+        // inject badge flyout (only if has local label)
+        addBadgeFlyout();
+
+        // show/hide user name & menu
+        /* globals USER */
+        addUserInfo(USER);
+
+        $u02.toggleClass(CLS_NOTOOLS, !$u02.find(classSelector(CLS_TOOLS)).length);
+
+        // replace country menu source with OTN source on OTN pages
+        if (/oracle\.com\/technetwork/.test(window.location.href) && cmenucontent) {
+          $u02.find('a' + classSelector(CLS_REGN))
+            .attr('href', function() {
+              return this.href.split('#')[0] + '#u02countrymenu-otn';
+            });
+        }
+      }
+
+      return fetchMenuContent(menucontent)
+        .fail(logError)
+        .then(onMenuContentLoaded)
+        .then(function($menu) {
+
+          var $target = ($u02m.length && $u02m) || menucontent;
+
+          $menu
+            .FlyoutMenu()
+            .appendTo(
+              // if menu content was hard-coded into HTML,
+              // we replace with generated markup
+              $target.find(classSelector(CLS_CONTENT)).length &&
+              $target.find(classSelector(CLS_CONTENT)).remove().end() || $target
+            )
+            .before(HTML_POINTER)
+            .addClass(function() {
+              return isGlobal && CLS_MAINMENU;
+            });
+
+
+          if (!isGlobal) {
+
+            // change behavior of buttons with flyouts to click open
+            $u02.find(classSelector([
+                [CLS_BTTNS, CLS_HASMENU]
+              ]))
+              .addClass(classList([CLS_CLICKOPEN, CLS_DROPDOWN]))
+              .find(classSelector(CLS_TOOLPOP))
+              .before(HTML_POINTER);
+
+            if ($u02.find(classSelector(CLS_MEGAMENU)).length) {
+
+              // add hamburger markup
+              $u02m.addClass('u02haml')
+                .find('.u02mlinkw1 > a')
+                .prepend(createElement('div', 'u02hamenu')
+                  .html(
+                    '<span class="m2"></span>' +
+                    '<span class="m3"></span>'
+                  ));
+
+              $u02.find(classSelector(CLS_MEGAMENU)).MegaMenu();
+
+            } else {
+
+              // must initialize after injecting so that
+              // it has a reference to its nav container
+              $menu.MoreMenu();
+
+              // remove u02mlink class on local nav
+              $u02m.removeClass(CLS_MLINK)
+                .find('.u02mlinkw1')
+                .remove();
+
+              $menu
+                // remove mheight class / inline styles from top level links
+                .find(classSelector(CLS_MENUL1))
+                .removeClass(CLS_EQHEIGHT)
+                .css('cssText', '');
+            }
+          }
+        })
+        // regardless of menucontent fetch, always run initialization
+        // 	event handlers without targets will fail silently
+        .always(function() {
+
+          // grep acct links for domain fixing
+          updateLinks(isGlobal);
+          resizeMenu();
+          initDeviceType();
+          initKeyboardEvents();
+          initSearchEvents();
+          initSkipPanelEvents();
+          initToolPanelEvents();
+          initMenuEvents();
+
+          // if needed, other code can listen for 'u02ready'
+          return $u02.addClass(CLS_INIT) && $nav.trigger(EV_READY) &&
+            // only trigger resize event on responsive pages
+            ($nav.closest(classSelector([CLS_RESPONSIVE, 'f11'])).length &&
+              $(window).off(evList([EV_RESIZE, EV_ORIENT]))
+              .on(evList([EV_RESIZE, EV_ORIENT]), onWindowResized));
+        });
+
+
+      /////////////////////////////////////////////////////////////////////////////////////////////
+      //  INSTANCE FUNCTIONS
+      /////////////////////////////////////////////////////////////////////////////////////////////
+      
+      
+      function addUserInfo(user) {
+        // only called if isGlobal
+        var $user = $u02.find(classSelector([
+            [CLS_USER, CLS_USERDATA, CLS_ULINK]
+          ])),
+          $avatar = $u02.find(classSelector([
+            [CLS_USER, 'u02useravatar']
+          ])),
+          NOT_FOUND = 'NOT_FOUND',
+          usertxt = '',
+          avatartxt = '';
+
+
+        // legacy compatibility
+        if (!$user.length) {
+          $u02.find('.u02userinw1, .u02userinw2')
+            .wrapInner(function() {
+              return createElement('div', 'u02usertools')
+                .append($(this).hasClass('u02userloggedin') &&
+                  createElement('div', CLS_CONTENT));
+            })
+            .prepend(function() {
+              return $(this).hasClass('u02userloggedin') &&
+                createElement('div', CLS_USER)
+                .append(createElement('div', CLS_USERDATA));
+            }).end()
+            .find('#u02userinfo').remove().end()
+            .find('ul[id="u02usertools"], ul.u02usertools')
+            .removeAttr('id')
+            .removeClass('u02usertools')
+            .wrap(function() {
+              return $(this).closest('.u02userinw1')
+                .hasClass('u02userloggedin') &&
+                createElement('div', CLS_MENUL1);
+            })
+            .addClass(function() {
+              return !$(this).closest('[class*="u02userinw"]')
+                .hasClass('u02userloggedin') &&
+                'u02usertools-ul';
+            }).end()
+            .find('a.u02bttn')
+            .removeClass('u02bttn')
+            .wrap(function() {
+              return $(this).data('lbl') === 'signin' &&
+                createElement('div', 'u02bttn');
+            }).end()
+            .find(classSelector(CLS_CONTENT, '> a'))
+            .not(document.getElementById('#u02pfile-acct'))
+            .wrap(createElement('li')).removeClass('u02bttn')
+            .closest('li')
+            .appendTo(classSelector(CLS_CONTENT, ' ul'));
+
+          $user = $u02.find('#u02pfile-acct')
+            .unwrap()
+            .prependTo(
+              $u02.find(classSelector([
+                [CLS_USER, CLS_USERDATA]
+              ]))
+            )
+            .addClass(CLS_ULINK);
+        }
+
+        $u02.find('.u02userin')
+          // THINK THIS IS NOT NEEDED...
+          // .prepend('<h5 class="u02pttl u02userloggedin">' +
+          // 						$u02.find('.u02signout').text() +
+          // 					'</h5>\n' +
+          // 					'<h5 class="u02pttl u02userloggedout">' +
+          // 						$u02.find('.u02signin').text() +
+          // 					'</h5>')
+          .find(classSelector(CLS_CONTENT)).FlyoutMenu()
+          .find(classSelector(CLS_EQHEIGHT))
+          // no equal height needed
+          .removeClass(CLS_EQHEIGHT)
+          // remove any inline styles
+          .css('cssText', '').end()
+          // change behavior of .u02menu-hasm to open/close on click only
+          .find(classSelector(CLS_HASMENU))
+          .addClass(CLS_CLICKOPEN).end()
+          // remove back nav
+          .find(classSelector(CLS_BACK)).remove();
+
+
+        if (!user || !user.guid) {
+          return false;
+        }
+
+        if (user.username && user.username !== NOT_FOUND) {
+          usertxt = user.username;
+          avatartxt = user.username[0].toUpperCase();
+        }
+        if (user.firstname && user.firstname !== NOT_FOUND &&
+          user.lastname && user.lastname !== NOT_FOUND) {
+          usertxt = [user.firstname, user.lastname].join(' ');
+          avatartxt = [user.firstname[0].toUpperCase(),
+            user.lastname[0].toUpperCase()
+          ].join('');
+        } else if (user.firstname && user.firstname !== NOT_FOUND) {
+          usertxt = user.firstname;
+          avatartxt = user.firstname[0].toUpperCase();
+        } else {
+          $user.addClass('u02usernoname');
+        }
+
+        $user
+          .text(usertxt.trim())
+          .attr('data-lbl', 'user-account');
+
+        if ($avatar.length) {
+          // only use text if no icon or image
+          if (!$avatar.children('div').first().is('[class*="u02icn"]') &&
+            !$avatar.find('img').length) {
+            $avatar.children('div').first().empty().append('<h6>' + avatartxt + '</h6>');
+          }
+        }
+
+        $u02.find(classSelector(CLS_LOGGEDOUT))
+          .removeClass(CLS_LOGGEDOUT)
+          .addClass(CLS_LOGGEDIN);
+      }
+
+      function buildCountryMenu(html) {
+
+        var $src = $u02.find(classSelector(CLS_REGN)), //u02regn
+          href = $src.length && $src.attr('href'),
+          // needed if called from local nav menu content
+          $tool = $nav.add($others).find('#u02cmenu'),
+          $pointer = $(HTML_POINTER),  //'<div class="u02menu-l1z1"><i></i></div>',
+          $toolpop = createElement('div', [CLS_CMENUPOP, CLS_TOOLPOP]), //u02cmenupop, u02toolpop
+          cmid,
+          $cmenu;
+
+        // make sure that no-override flag has not been set by
+        // 	country menu built from	local nav menu source
+        if (isGlobal && $src.hasClass(CLS_NOOVERRIDE)) {  //u02nooverride
+          return false;
+        }
+
+        cmid = href && href.split('#')[1] || CLS_CMENU;
+
+        $cmenu = $('#' + cmid, html);
+
+        $cmenu.find(classSelector(CLS_CMENUL1, ' > li')).each(function() {
+          var $li = $(this),
+            btxt = $li.children(classSelector(CLS_CLINK)).text();
+          $li.find('> div > ul').first()
+            .prepend(createElement('li', [CLS_BACK, CLS_NOSUBMENU])
+              .html(createElement('a', CLS_BLINK, {
+                href: '#back'
+              }).text(btxt)));
+        });
+
+        $cmenu.find(classSelector(CLS_CMENUL2)).each(function() {
+          var $menu = $(this);
+          if ($menu.find(classSelector(CLS_CMENUCOL)).length === 3) {
+            $menu.addClass(CLS_CMENU3COL);
+            $menu.closest(classSelector(CLS_CMENU)).addClass(CLS_CMENU3COL);
+          }
+        });
+
+        $cmenu.find(classSelector(CLS_CMENU, ' > ul'))
+          .prepend(createElement('li', 'u02pttl-li')
+            .html(createElement('h5', 'u02pttl').text($tool.find(classSelector(CLS_TICON)).text())));
+
+        $cmenu.find(classSelector(CLS_CURREGN)).addClass(CLS_DEFLTREGN);
+
+        $tool
+          .append(!$tool.find(classSelector(CLS_POINTER)).length && $pointer)
+          .append(!$tool.find(classSelector(CLS_TOOLPOP)).length && $toolpop)
+          .find(classSelector(CLS_CMENUPOP)).html($cmenu).end()
+          .find('h5.u02pttl, .u02ticon > span').text(function() {
+            return $cmenu.data('toollabel') || $tool.find(classSelector(CLS_TICON)).text();
+          });
+
+        if ($tool.find(classSelector(CLS_CMENUPOP, ' .u02cmenu-simple')).length) {
+          $tool.find(classSelector(CLS_CMENUPOP)).addClass(CLS_CMENUPOP + '-simple');
+        } else {
+          $tool.find(classSelector(CLS_CMENUPOP)).removeClass(CLS_CMENUPOP + '-simple');
+        }
+
+        $tool.find(classSelector(CLS_REGN)).attr('href', '#' + cmid)
+          // flags no-override if countrymenu came from local menu source,
+          // 	needed due to async timing of menucontent calls - local menu
+          // 	may hit before global menu source
+          .addClass(function() {
+            return !isGlobal && CLS_NOOVERRIDE;
+          });
+
+        addAriaTree();
+
+        $src.removeAttr('href');
+        $src.attr('role','button');
+
+        return setCountryIndicator();
+      }
+
+      function buildContactMenu(html) {
+
+        var $src = $u02.find(classSelector(CLS_CONTACT)),
+          // needed if called from local nav menu content
+          $tool = $nav.add($others).find('#u02contact'),
+          $pointer = $(HTML_POINTER),
+          $toolpop = createElement('div', [CLS_CONTACT, CLS_TOOLPOP]),
+          isLocal = $u02.hasClass(CLS_LOCALNAV),
+          ctmid,
+          $ctmenu;
+
+        // make sure that no-override flag has not been set by
+        // 	country menu built from	local nav menu source
+        if (!isLocal && $src.hasClass(CLS_NOOVERRIDE)) {
+          return false;
+        }
+
+        // legacy markup support for #u02call
+        if (!$tool.length) {
+          $tool = $nav.add($others).find('#u02call')
+            .attr('id', CLS_CONTACT)
+            .removeClass('u02mbttn')
+            .addClass(CLS_MTOOL)
+            .find(classSelector(CLS_TICON))
+            .removeClass('u02call o-call')
+            .addClass(CLS_CONTACT).end();
+        }
+
+        ctmid = $src.length && $src.attr('href').split('#')[1] ?
+          $src.attr('href').split('#')[1] : CLS_CTMENU;
+
+        $ctmenu = $('#' + ctmid, html).length && $('#' + ctmid, html) ||
+          // legacy support for u02modal content
+          $('.u02callmodal', html).removeClass('u02mod').attr('id', CLS_CTMENU);
+
+        $tool
+          .append(!$tool.find(classSelector(CLS_POINTER)).length && $pointer)
+          .append(!$tool.find(classSelector(CLS_TOOLPOP)).length && $toolpop)
+          .find(classSelector(CLS_TOOLPOP)).html($ctmenu).end()
+          .find(classSelector(CLS_TICON, '> span')).text(function() {
+            return $ctmenu.data('toollabel') || $tool.find(classSelector(CLS_TICON)).text();
+          });
+
+        $tool.find('a' + classSelector(CLS_CONTACT)).attr('href', '#' + ctmid)
+          // flags no-override if countrymenu came from local menu source,
+          // 	needed due to async timing of menucontent calls - local menu
+          // 	may hit before global menu source
+          .addClass(function() {
+            return isLocal && CLS_NOOVERRIDE;
+          });
+      }
+
+      function updateLinks(isGlobal) {
+
+        var $pacct = $u02.find('#u02pfile-acct, .u02ulink'),
+          $pregs = $u02.find('#u02pfile-regs'),
+          $psout = $u02.find('#u02pfile-sout'),
+          hloco = window.location.host,
+          turl = encodeURI(window.location.href.replace(/^http:/gi, 'https:'))
+          .replace(/^https:\/\/www-content/gi, 'http://www-content');
+
+        if ($pacct.length) {
+          $pacct.attr('href', $pacct.attr('href').replace(/nexturl=/gi, 'nexturl=' + turl));
+        }
+        if ($pregs.length) {
+          $pregs.attr('href', $pregs.attr('href').replace(/nexturl=/gi, 'nexturl=' + turl));
+        }
+        if ($psout.length) {
+          $psout.attr('href', $psout.attr('href').replace(/p_done_url=/gi, 'p_done_url=' + turl));
+        }
+
+        // if page is in a frame target top
+        if (window.frameElement) {
+          $u02.find('a', classSelector(CLS_SEARCHFORM)).attr('target', '_top');
+        }
+
+        return (/www-(sites|stage)\.oracle\.com/.test(hloco) &&
+            (
+              $pregs.attr('href', $pregs.attr('href')
+                .replace(/www\.oracle\.com/,
+                  'www-portal-stage.oracle.com')) &&
+              $psout.attr('href', $psout.attr('href')
+                .replace(/login\.oracle\.com/,
+                  'login-stage.oracle.com'))
+            )) ||
+          (/^(?!portal-)stage\.oracle\.com/.test(hloco) &&
+            (
+              $pregs.attr('href', $pregs.attr('href')
+                .replace(/www\.oracle\.com/,
+                  'www-content-stage.oracle.com'))
+            )) ||
+          (/www-(sites-)?dev/.test(hloco) &&
+            (
+              $pregs.attr('href', $pregs.attr('href')
+                .replace(/www\.oracle\.com\/webapps/,
+                  'adc2170261.us.oracle.com')) &&
+              $psout.attr('href', $psout.attr('href')
+                .replace(/login\.oracle\.com/,
+                  'adc2201490.us.oracle.com'))
+            )) ||
+          (/www-content\.oracle/.test(hloco) &&
+            (
+              $pregs.attr('href', $pregs.attr('href')
+                .replace(/www\.oracle\.com/,
+                  'www-content.oracle.com'))
+            )) ||
+          (/portal-stage\.oracle/.test(hloco) &&
+            (
+              $pregs.attr('href', $pregs.attr('href')
+                .replace(/.*nexturl=/gi,
+                  'http://www-portal-stage.oracle.com/webapps/redirect/signon?nexturl='))
+            ));
+      }
+
+      function addIconMarkup() {
+
+        // add hamburger markup
+        $u02m.addClass('u02haml')
+          .find('a')
+          .prepend(createElement('div', 'u02hamenu')
+            .html(
+              '<span class="m1"></span>' +
+              '<span class="m2"></span>' +
+              '<span class="m3"></span>' +
+              '<span class="m4"></span>'
+            ));
+
+        // add xtra object to toolpop (can't use before)
+        $u02.find(classSelector(CLS_TOOLPOP))
+          .before(HTML_POINTER);
+
+        if ($u02.find(classSelector(CLS_SEARCH)).length) {
+          // add search link object for opening search on mobile
+          $u02.find('.u02menu')
+            .before(createElement('a', [], {
+                id: 'mobisearch',
+                href: '#search'
+              })
+              .html(createElement('span').text($u02.find('#u02skip2s').text())
+                .html('<i class="u02i1"></i><i class="u02i2"></i>')));
+        }
+
+        $u02.find('.u02userlogins > a')
+          .append(createElement('div', 'u02loginmenu')
+            .html(
+              '<span class="m2"></span>' +
+              '<span class="m3"></span>'
+            ));
+      }
+
+      function addBadgeFlyout() {
+
+        if (!$u02.find(classSelector(CLS_LOCLABEL)).length ||
+          $u02.find(classSelector(CLS_LOGO)).hasClass(CLS_NOSPLIT)) {
+          return false;
+        }
+
+        var $logo = $u02.find(classSelector(CLS_LOGO)),
+          $ga = $logo.find('a'),
+          $la = $u02.find(classSelector(CLS_LOCLABEL, ' a')),
+          globalLink = $ga.attr('href'),
+          globalTxt = $ga.attr('title') || $ga.text().trim(),
+          localLink = $la.attr('href'),
+          localTxt = $la.attr('title') || $la.text().trim();
+
+        return createElement('div', CLS_LOGOW2)
+          .append(createElement('a', null, {
+            href: localLink,
+            title: localTxt,
+            textContent: localTxt
+          }))
+          .append(createElement('hr'))
+          .append(createElement('a', null, {
+            href: globalLink,
+            title: globalTxt,
+            textContent: globalTxt
+          }))
+          .appendTo($logo)
+          .removeAriaAttributes($u02.hasClass(CLS_TABNAV))
+          .addAriaAttributes($u02.hasClass(CLS_TABNAV))
+          .before(HTML_POINTER) &&
+          $logo.on(evList([EV_MOUSEIN, EV_TOUCH, EV_CLICK]), onBadgeTrigger);
+
+        function onBadgeTrigger(e) {
+
+          var namespc = [NS_U02, 'badge'].join('-');
+
+          // follow links within flyout
+          if ($(e.target).is('a') &&
+            $(e.target).closest(classSelector(CLS_LOGOW2)).length) {
+            return true;
+          }
+
+          if (IS_TOUCH && (e.type === EV_MOUSEIN || e.type === EV_MOUSEOUT)) {
+            return false;
+          }
+
+          e.preventDefault();
+
+          return (!$logo.hasClass(CLS_OPEN) &&
+              $nav.add($others).closeMenu() &&
+              $u02.find('#mobisearch, #u02search').removeClass(CLS_SEARCHPOP) &&
+              $logo.openMenu() &&
+              $nav.add($others)
+              .off(eventList(EV_MENUOPEN, namespc))
+              .one(eventList(EV_MENUOPEN, namespc), $logo.closeMenu.bind($logo))) ||
+            ($logo.closeMenu() &&
+              $nav.add($others).off(eventList(EV_MENUOPEN, namespc)));
+        }
+      }
+
+      function toolSwitch($li) {
+
+        // always blur search field
+        $nav.add($others).find(INPUT_SEARCH).blur();
+
+        // short circuit on load, resize handler
+        if ((!$li || $li == null) && hasClosed) {
+          return true;
+        }
+
+        resetCountryMenu(function() {
+          $u02.find(classSelector(CLS_CMENU))
+            // set to data-attr to allow for clearing on region change
+            .data('cmenuTimeout',
+              setTimeout(cmenuEqualHeight, 400));
+        });
+
+        $u02.find(classSelector([
+            [CLS_TOOLS, CLS_OPEN]
+          ]))
+          // don't close toolpop if we're in a menu inside it
+          .not(function() {
+            return $li && !$li.hasClass(CLS_MTOOL) ||
+              $li && $li.length &&
+              $li.closest(classSelector(CLS_MTOOL))[0] === this;
+          })
+          .closeMenu();
+
+        if ($li && $li.length) {
+
+          $li.addClass(CLS_OPEN);
+
+          if ($li.hasClass(CLS_MTOOL)) {
+            $li.addAriaAttributes($u02.hasClass(CLS_TABNAV));
+            // prep height transition on user more menu
+            $li.find(classSelector(CLS_MENUL2)).prepareHeightTransition();
+          }
+
+          if (!$u02.hasClass(CLS_MOBILE)) {
+            $u02m.add($others).closeMenu();
+          }
+
+          if($li.hasClass("clicked")) {
+            $li.focusOnFirstAccounItem();
+          }
+
+          $nav.prev(classSelector(CLS_OFFSTATE)).addClass(CLS_SHOW)
+            .off(evList([EV_TOUCH, EV_CLICK], 'toolpop'))
+            .one(evList([EV_TOUCH, EV_CLICK], 'toolpop'), toolSwitch.bind(null, null));
+
+          // TOOL PANELS CLOSE ON LEAVE - DESKTOP
+          $li.one(EV_MOUSEOUT,
+            !IS_TOUCH &&
+            $u02.hasClass(CLS_DTOP) &&
+            $li.hasClass(CLS_MTOOL) &&
+            function() {
+              $li.addClass(CLS_NOHOVER);
+              toolSwitch(null);
+              setTimeout($li.removeClass.bind($li, CLS_NOHOVER), 600);
+            });
+
+          return $li.trigger(EV_MENUOPEN) && (hasClosed = false);
+
+        } else {
+
+          return $u02.find(classSelector(CLS_MTOOL))
+            .off(EV_MOUSEOUT)
+            .closeMenu() &&
+            (hasClosed = true);
+        }
+      }
+
+      function shiftToolPop() {
+        var $toolpops = $u02.find(classSelector(CLS_TOOLPOP));
+        return $u02.hasClass(CLS_DTOP) &&
+          window.requestAnimationFrame(
+            $toolpops.menuShift.bind($toolpops, null, null, null, true)) || 1;
+      }
+
+      function shiftMegaMenu() {
+
+        var $megamenus = $u02.find(classSelector([
+            [CLS_MEGACTR, CLS_MLINK], CLS_MEGAMENU
+          ]))
+          .children(classSelector([
+            CLS_CONTENT,
+            navType !== 'MOBI' && CLS_MENUL2
+          ]));
+
+        return (navType === 'MOBI' &&
+            $u02.find(classSelector([
+              [CLS_MEGACTR, CLS_MENUL2]
+            ]))
+            // unset any previous width calc
+            .css('width', '') || 1) &&
+          $megamenus.length &&
+          window.requestAnimationFrame(
+            $megamenus.menuShift.bind($megamenus, CLS_MENUL1, null, null, true));
+      }
+
+      function onWindowResized(e) {
+        return !u02working &&
+          (u02working = true) &&
+          window.requestAnimationFrame(resizeMenu.bind(null, e));
+      }
+
+      function resizeMenu(e) {
+
+        //  iOS/Chrome reports false values for window.innerWidth
+        //  	on orientationchange, so more reliable to just check
+        //  	the width of the nav
+        //  *BUT* because the presence of scrollbar can impact this size,
+        //  	we can't use it to determine whether to set dtop/mobi class
+        //  	so we use the content of the :before which gets set by CSS
+        winW = $nav.outerWidth();
+
+        // reliably gets 'DTOP', 'TAB' or 'MOBI' based on media query
+        navType = window.getComputedStyle($u02[0], ':before').content.replace(/\W/g, '');
+
+        // test if nav width has changed to prevent code running on iOS onscroll
+        if (wcheck !== winW || (e && e.type === 'orientationchange')) {
+          wcheck = winW;
+
+          // defer equal height processing until resize is complete
+          clearTimeout(resizeTimeout);
+
+          $nav.closeMenu();
+
+          // SET MOBILE
+          if (navType === 'MOBI') {
+
+            $u02.removeClass(classList([CLS_TAB, CLS_DTOP])).addClass(CLS_MOBILE);
+            cloneButtons();
+
+            // SET DESKTOP
+          } else {
+
+            $u02.addClass(CLS_DTOP)
+              .toggleClass(CLS_TAB, navType === 'TAB')
+              .removeClass(CLS_MOBILE);
+
+            removeClonedButtons();
+
+          }
+
+          resizeTimeout = setTimeout(function() {
+            return equalHeights() && shiftToolPop() && shiftMegaMenu();
+          }, 100);
+
+          // remove any menuclose listeners attached for targetEqualHeights
+          $nav.find(classSelector(CLS_HASMENU)).off(evList(EV_MENUCLOSE));
+        }
+
+        return (u02working = false);
+      }
+
+      function equalHeights() {
+        return $nav
+          .find(classSelector(CLS_EQHEIGHT)).css('height', '').end()
+          .find(classSelector(
+            [
+              [CLS_MAINMENU, CLS_MENUL1],
+              [
+                [CLS_LOCALNAV, CLS_DTOP].join('.'),
+                CLS_MENUL1 + '> ul >', CLS_HASMENU
+              ]
+            ]))
+          .not(classSelector(
+            [
+              CLS_MEGAMENU,
+              [CLS_MEGAMENU, CLS_HASMENU]
+            ]))
+          .each(function() {
+            var $eqHts = $(this).find(classSelector(CLS_EQHEIGHT))
+              .addBack(classSelector(CLS_EQHEIGHT)).addClass(CLS_SHOW);
+            window.requestAnimationFrame(function() {
+              $u02.find(classSelector(CLS_PADDED)).removeClass(CLS_PADDED);
+              $eqHts.equalHeight(true).removeClass(CLS_SHOW);
+              return !isGlobal && $u02.find(classSelector(CLS_MORELIST)).addClass(CLS_PADDED);
+            });
+          }) &&
+          cmenuEqualHeight() &&
+          megamenuEqualHeights() &&
+          !isGlobal && $u02.find(classSelector([CLS_MEGAMENU, CLS_MENUL2])).addClass(CLS_PADDED);
+      }
+
+      function targetEqualHeights($target) {
+
+        $u02.find(classSelector(CLS_EQHEIGHT)).css('height', '').end()
+          .find(classSelector(CLS_PADDED)).removeClass(CLS_PADDED);
+
+        var $eqHts = $target.parents(
+            classSelector([
+              CLS_MENUL2,
+              navType !== 'DTOP' && CLS_MENUL1
+            ]))
+          .find(classSelector(CLS_EQHEIGHT))
+          .addBack(classSelector(CLS_EQHEIGHT))
+          .filter(function() {
+            // only include open menus
+            return $(this).closest(classSelector([CLS_MLINK, CLS_HASMENU])).hasClass(CLS_OPEN);
+          })
+          .addClass(CLS_SHOW),
+          // use the natural height of the open menu instead of the tallest
+          eqHeight = $target.find(classSelector(CLS_EQHEIGHT))
+          .first().outerHeight();
+
+        return window.requestAnimationFrame(function() {
+            $eqHts.css('height', eqHeight).removeClass(CLS_SHOW);
+            return $u02.find(classSelector(CLS_MORELIST)).addClass(CLS_PADDED);
+          }) &&
+          $target.one(evList(EV_MENUCLOSE), function(e) {
+            e.stopPropagation();
+            // only reset on close if in mobile
+            return navType === 'MOBI' && targetEqualHeights($target.parents(classSelector([CLS_HASMENU, CLS_MLINK])).first());
+          });
+      }
+
+      function megamenuEqualHeights() {
+
+        // only do equal height in tablet/mobile view
+        return navType !== 'DTOP' &&
+          $nav.find(classSelector(CLS_MEGACTR))
+          .each(function() {
+
+            var $eqHts = $(this).find(classSelector(CLS_EQHEIGHT))
+              .addBack(classSelector(CLS_EQHEIGHT))
+              // no u02menu-l3 in tablet
+              .not(classSelector(navType === 'TAB' && CLS_MENUL3))
+              // no u02menu-l2 for single-panel megamenu
+              .not(classSelector($u02m.hasClass(CLS_MEGAMENU) && CLS_MENUL2))
+              .addClass(CLS_SHOW);
+
+            return (navType === 'TAB' &&
+                $u02.find(classSelector([
+                  [CLS_MEGACTR, CLS_MENUL3]
+                ]))
+                // unset any previous height calc for menu-l3 in tablet
+                .css('height', '') || 1) &&
+              window.requestAnimationFrame(function() {
+                return $eqHts.equalHeight(true).removeClass(CLS_SHOW);
+              });
+          }) ||
+          $nav.find(classSelector(CLS_EQHEIGHT)).css('height', '');
+      }
+
+      function cmenuEqualHeight(force) {
+
+        // only need to do the current region - this gets re-called on region change
+        var $cmenus = $u02.find(classSelector([CLS_CMENUL1, [CLS_CURREGN, CLS_CMENUL2]])),
+          // iPad Chrome mis-reports window.innerWidth on orientationchange,
+          // 	so we just base it off of media query css of toolpop panel
+          doheight = $u02.find(classSelector(CLS_CMENUPOP)).width() > 340 || !!force;
+
+        // clear any running timeout from resetCountryMenu
+        clearTimeout($u02.find(classSelector(CLS_CMENU)).data('cmenuTimeout'));
+
+        // unset existing equal height styles
+        return $u02.find(classSelector([CLS_CMENUL1, CLS_CMENUL2], '[style*="height"]'))
+          .css('height', '') &&
+          (doheight && $cmenus.equalHeight(true)) || 1;
+      }
+
+      function resetCountryMenu(cb) {
+
+        // reset region to default
+        if (!$u02.find(classSelector([
+            [CLS_CURREGN, CLS_DEFLTREGN]
+          ])).length) {
+          $u02.find(classSelector(CLS_DEFLTREGN, ' > a')).focus();
+          $u02.find(classSelector(CLS_CURREGN)).removeClass(CLS_CURREGN);
+          $u02.find(classSelector(CLS_DEFLTREGN)).addClass(CLS_CURREGN);
+        }
+
+        $u02.find(classSelector([
+          [CLS_CMENU, CLS_SHOW]
+        ])).removeClass(CLS_SHOW);
+
+        return cb && cb();
+      }
+
+      /* globals PDITLocaleMap */
+      function setCountryIndicator() {
+
+        var $links = $(classSelector(CLS_CMENUPOP, ' a:not(.u02clink):not(.u02blink)')),
+          siteid = $('meta[name="siteid"]').attr('content'),
+          DATA_CURR = 'data-currentcc';
+
+        return ('undefined' === typeof PDITLocaleMap || siteid == null) ||
+
+          PDITLocaleMap.init().then(function(data) {
+
+            var $label = $links
+              // store a data-attr with a score for how many types of matches
+              // 	are found for a given link, since englishcountryname may not
+              // 	be what's displayed, so also have to check siteid against href
+              .attr(DATA_CURR, function() {
+                var matches = 0;
+                matches += +(this.textContent === data[siteid].englishcountryname);
+                matches += +(this.textContent === data[siteid].countryname);
+                matches += +(this.textContent.localeCompare(data[siteid].countryname) === 0);
+                matches += +(new RegExp('/' + siteid + '/', 'i').test(this.href));
+                return matches;
+              })
+              // remove non-matches
+              .filter(function() {
+                return +$(this).attr(DATA_CURR) > 0;
+              })
+              // sort by highest match first
+              .sort(function(a, b) {
+                var aScore = +$(a).attr(DATA_CURR),
+                  bScore = +$(b).attr(DATA_CURR);
+                return aScore > bScore ? -1 :
+                  aScore < bScore ? 1 :
+                  0;
+              })
+              // return the first
+              .eq(0);
+
+            return $links.removeAttr(DATA_CURR) &&
+
+              $label.length &&
+
+              // remove any existing current tags
+              $(classSelector(CLS_CMENUPOP))
+              .find(classSelector([CLS_CURREGN, CLS_DEFLTREGN, CLS_CURRCTRY]))
+              .removeClass(classList([CLS_CURREGN, CLS_DEFLTREGN, CLS_CURRCTRY])) &&
+
+              // apply current tags to the match and parent region
+              $label
+              .closest(classSelector([CLS_CMENUL1], '> li'))
+              .addClass(classList([CLS_CURREGN, CLS_DEFLTREGN])) &&
+
+              // need to run equalHeight
+              cmenuEqualHeight(true);
+          });
+      }
+
+      function cloneButtons() {
+
+        return $u02.hasClass(CLS_LOCALNAV) &&
+          $u02.data(DATA_CLONED) == null &&
+          $u02.data(DATA_CLONED, true)
+          .find(classSelector(CLS_BTTNS))
+          .clone()
+          .removeClass(CLS_LOCALW3)
+          .find(classSelector(CLS_SEARCH)).remove().end()
+          .appendTo(
+            $u02.find(classSelector(CLS_MEGACTR)).length &&
+            $u02.find(classSelector(CLS_MENUL1)).addClass(CLS_HASBTTNS) ||
+            $u02.find(classSelector(CLS_MENUL1, '> ul > li'))
+            .find(classSelector(CLS_MENUL2)).addClass(CLS_HASBTTNS)
+          );
+      }
+
+      function removeClonedButtons() {
+
+        return $u02.hasClass(CLS_LOCALNAV) &&
+          !$u02.hasClass(CLS_MEGAMENU) &&
+          !!$u02.data(DATA_CLONED) &&
+          $u02.removeData(DATA_CLONED)
+          .find(classSelector(CLS_HASBTTNS))
+          .removeClass(CLS_HASBTTNS)
+          .find(classSelector(CLS_BTTNS))
+          .remove();
+      }
+
+      function inputHasFocus(i) {
+        return $(i).is(':focus') || $(i).hasClass(CLS_FOCUS);
+      }
+
+      function hasScrolled() {
+        var newY = window.scrollY;
+        return Math.abs(newY - wscroll) > 5;
+      }
+
+      function fetchMenuContent(endpoint) {
+
+        if (!endpoint.length) {
+          return $.Deferred().reject();
+        }
+
+        // if passed a jQuery object of menu, return as html string
+        // if url matches content already fetched, return the cached html string
+        // otherwise we do the ajax call and pass to the ajax handler
+        return (endpoint instanceof jQuery &&
+            $.Deferred().resolve(endpoint[0].outerHTML)) ||
+          // if this endpoint has already been fetched
+          // 	return the cached promise
+          contentCache[endpoint.split('#')[0]] ||
+          // otherwise assign this ajax request to the cache
+          // 	and make the call to the endpoint
+          (contentCache[endpoint.split('#')[0]] =
+            $.ajax({
+              url: endpoint,
+              type: 'GET',
+              contentType: 'text/plain; charset=UTF-8',
+              crossDomain: true,
+              // support for custom/modified headers config
+              /* globals beforeMenuContentFetch */
+              beforeSend: 'undefined' !== typeof beforeMenuContentFetch &&
+                beforeMenuContentFetch
+            }));
+      }
+
+      function onMenuContentLoaded(data) {
+
+        var // id ref from country tool link
+          cid = /#\w+$/.exec(cmenucontent),
+          cCls = classSelector([
+            [CLS_SMAP, CLS_CMENU]
+          ]),
+          cSelect = !!cid && [cid[0], cCls].join() || cCls,
+          // id ref from contact tool link
+          ctid = /#\w+$/.exec(ctmenucontent),
+          ctCls = classSelector([
+            [CLS_SMAP, CLS_CTMENU]
+          ]),
+          ctSelect = !!ctid && [ctid[0], ctCls, '#o-call'].join() || [ctCls, '#o-call'].join(),
+          $menu,
+          $cmenu,
+          $ctmenu;
+
+        // convert H5's to A
+        data = data.replace(/<([^h/>]*)h5/g, '<a class="' + CLS_TLINK + '" href="#open" ')
+          .replace(/<\/h5>/g, '</a>');
+
+        // if passed inline content from local nav (.u02w2), use > .u02menucontent
+        // 	otherwise, confine the find to .u02smap (external site map) to prevent
+        // 	picking up other header menucontent, eg. from .u02usertools
+        $menu = $(data).hasClass(CLS_LOCALW2) && $(data).children(classSelector(CLS_CONTENT)) ||
+          $(data).find(['#u02mainmenu', classSelector([
+            [CLS_SMAP, CLS_CONTENT]
+          ])].join()).first();
+        $cmenu = $(data).find(cSelect).first();
+        $ctmenu = $(data).find(ctSelect).first();
+
+        $menu.addClass(CLS_CONTENT)
+          .find(classSelector([CLS_MENUL1, CLS_MENUL2], '> ul > li > a'))
+          .addClass(CLS_TLINK)
+          .attr('href', function() {
+            // don't use or return this.href b/c it always resolves to full url
+            var href = $(this).attr('href') || '';
+            // if no href defined, set to #open
+            return (!href.length ||
+                /#open$/.test(href)) && '#open' ||
+              href;
+          });
+
+        // for univeral pages force full path on all menu links in global nav
+        if ($nav.hasClass(CLS_OCOMBASE) && isGlobal) {
+          $menu.find('a[href^="/"]')
+            .not('[href$="#open"]')
+            .attr('href', function() {
+              // don't use or return this.href b/c it always resolves to full url
+              var href = $(this).attr('href');
+              // don't rewrite country/contact menu links
+              // Changed 'https://www.oracle.com' by window.location.origin
+              return !$(this).hasClass(CLS_TICON) &&
+                href;
+            });
+        }
+
+        if ($cmenu.length) {
+          buildCountryMenu(data.replace(new RegExp(CLS_TLINK, 'g'), CLS_CLINK));
+        }
+
+        // if a different menucontent url is set in country tool,
+        // 	we have to fetch that content and override country menu
+        if (isGlobal && 'undefined' !== typeof cmenucontent &&
+          cmenucontent.split('#')[0].length &&
+          cmenucontent.split('#')[0] !== menucontent.split('#')[0]) {
+          fetchMenuContent(cmenucontent)
+            .then(function(data) {
+              buildCountryMenu(
+                data
+                .replace(/<([^h/>]*)h5/g, '<a class="' + CLS_CLINK + '" href="#open" ')
+                .replace(/<\/h5>/g, '</a>')
+              );
+            })
+            .fail(logError);
+        }
+
+        if ($ctmenu.length) {
+          buildContactMenu(data);
+        }
+
+        // if a different menucontent url is set in contact tool,
+        // 	we have to fetch that content and override contact menu
+        if (isGlobal && 'undefined' !== typeof ctmenucontent &&
+          ctmenucontent.split('#')[0].length &&
+          ctmenucontent.split('#')[0] !== menucontent.split('#')[0]) {
+          fetchMenuContent(ctmenucontent)
+            .then(buildContactMenu)
+            .fail(logError);
+        }
+
+        $u02.find(['#u02menulink', classSelector(CLS_MENULINK)].join())
+          .removeAttr( "href" )
+          .closest('.u02menu').attr('data-trackas', 'menu');
+
+        return $.Deferred().resolve($menu);
+      }
+
+      function initMenuEvents() {
+        ////////////////////////////////////////////////////////////////////////////////////////
+        // MAIN MENU EVENTS
+        ////////////////////////////////////////////////////////////////////////////////////////
+
+        // MENU OPEN ON HOVER - DESKTOP
+        $nav.on(evList(EV_MOUSEIN),
+          classSelector([
+            [CLS_DTOP, CLS_MLINK],
+            [CLS_DTOP, CLS_HASMENU]
+          ]),
+          function(e) {
+            var $target = $(this);
+
+            // if clickopen menu return false on non-touch
+            return (!IS_TOUCH && !$target.hasClass(CLS_CLICKOPEN)) &&
+              $target.openMenu() &&
+              (($u02.find(classSelector(CLS_MEGAMENU, classSelector(CLS_HASMENU))).length &&
+                  navType === 'TAB' &&
+                  !$target.closest(classSelector(CLS_MENUL2)).length) &&
+                // run equal height from first menu for megamenu tablet
+                // 	for initial open of hamburger
+                targetEqualHeights(
+                  $target.hasClass(CLS_MLINK) &&
+                  navType === 'TAB' &&
+                  $target.find(classSelector(CLS_HASMENU)).first() ||
+                  $target
+                ) || 1) &&
+              toolSwitch();
+          });
+
+        $nav.on(evList(EV_TOUCHST), function() {
+          wscroll = window.scrollY;
+        });
+
+        // FOLLOW XLINKS
+        $nav.on(evList([EV_CLICK, EV_TOUCH]),
+          classSelector(CLS_XLINK),
+          function(e) {
+            return !hasScrolled() && true;
+          });
+
+        // MENU OPEN/CLOSE ON CLICK - DESKTOP / MOBILE
+        $nav.on(evList([EV_CLICK, EV_TOUCH]),
+          classSelector([CLS_MLINK, CLS_CLICKOPEN, CLS_HASMENU]),
+          function(e) {
+            var $target = $(this),
+              // get the link that was clicked on -
+              // 	samdung tablet is not assigning e.target correctly,
+              // 	nor calling the first bound handler (the xlink handler above)
+              // 	so we have explicitly assign e.target to innermost element (?!)
+              $actual = $(e.target).is(classSelector(CLS_NOSUBMENU)) &&
+              $(e.target).children('a') || $(e.target),
+              isMainMenu = $target.hasClass(CLS_MLINK),
+              isSubMenu = $target.hasClass(CLS_CLICKOPEN);
+
+
+            if (e.type === EV_CLICK && $actual.closest('a').hasClass(CLS_XLINK)) {
+              return true;
+            }
+
+            // prevent menu close if container is clicked or touch scrolling
+            if (!$actual.closest('a').length &&
+              $actual.closest($target).not($actual).length ||
+              hasScrolled() ||
+              hasClickPrevented($target) ||
+              e.isDefaultPrevented()) {
+              return;
+            }
+
+            if (e.cancelable) {
+              e.preventDefault();
+            }
+
+            // follow outbound links & mobile persistent buttons
+            //  closest allows for an inner wrap on anchor tag
+            if ($actual.closest('a').hasClass(CLS_XLINK) ||
+              ($actual.closest(classSelector(CLS_BTTNS)).length &&
+                !$actual.closest(classSelector(CLS_DROPDOWN)).length)) {
+              return $nav.closeMenu() && $actual.closest('a')[0].click();
+            }
+
+            $others.closeMenu();
+
+            if ($target.hasClass(CLS_OPEN)) {
+              return ((!$target.hasClass(CLS_MEGAMENU) || $target.hasClass(CLS_MLINK)) || navType !== 'TAB') &&
+                $target.closeMenu() &&
+                isMainMenu &&
+                $nav.find(classSelector([
+                  [CLS_MOBILE, CLS_TOOLS]
+                ])).closeMenu() &&
+                toolSwitch();
+            }
+
+            $u02.find(classSelector(CLS_SEARCHPOP)).removeClass(CLS_SEARCHPOP);
+            $target.openMenu();
+
+            if (($u02.hasClass(CLS_LOCALNAV) && navType === 'MOBI') ||
+              ($u02.find(classSelector(CLS_MEGAMENU,
+                  classSelector(CLS_HASMENU))).length &&
+                navType === 'TAB' &&
+                !$target.closest(classSelector(CLS_MENUL2)).length)) {
+              // run equal height from first menu for megamenu tablet
+              // 	for initial open of hamburger
+              targetEqualHeights(
+                $target.hasClass(CLS_MLINK) &&
+                navType === 'TAB' &&
+                $target.find(classSelector(CLS_HASMENU)).first() ||
+                $target
+              );
+            }
+
+            $others.off(evList(EV_MENUOPEN)).on(evList(EV_MENUOPEN), $target.closeMenu.bind($target));
+
+
+            return toolSwitch(isSubMenu && $target) &&
+              isMainMenu &&
+              $nav.find(classSelector([
+                [CLS_MOBILE, CLS_TOOLS]
+              ])).openMenu();
+          });
+
+          $nav.on(evList([EV_KEYDOWN]),
+              classSelector([CLS_MLINK, CLS_CLICKOPEN, CLS_HASMENU]),
+              function (e) {
+                var $target = $(this),
+                $actual = $(e.target).is(classSelector(CLS_NOSUBMENU)) &&
+                    $(e.target).children('a') || $(e.target);
+
+                if( e.type === EV_KEYDOWN && e.keyCode === 13 && $actual.is("#u02menulink")) {
+                  e.preventDefault();
+                  $target.openMenu().focusOnFirstItem();
+                }
+              });
+
+        // MENU OPEN SUB MENU LINKS - DESKTOP
+        $nav.on(evList([EV_CLICK, EV_TOUCH]), classSelector(CLS_TLINK),
+          function(e) {
+
+            var $actual = $(e.target),
+              $target = $actual.closest(classSelector(CLS_HASMENU));
+
+            if (hasScrolled() || hasClickPrevented($target) || e.isDefaultPrevented()) {
+              return;
+            }
+
+            // in the case of megamenu, with top level outbound links
+            // 	and submenu is shown in dtop, we hijack the click,
+            // 	convert to xlink and refire
+            // 	to be handled by menu-hasm handler
+            if ($u02.find(classSelector(CLS_MEGAMENU)).length &&
+              $u02.hasClass(CLS_DTOP) &&
+              !/#open$/.test($actual.closest('a').attr('href'))) {
+              return $actual.closest('a').addClass(CLS_XLINK)[0].click();
+            }
+
+            if (e.cancelable) {
+              e.preventDefault();
+            }
+
+            return ($target.hasClass(CLS_OPEN) &&
+                ((!$target.hasClass(CLS_MEGAMENU) || $target.hasClass(CLS_MLINK)) || navType !== 'TAB') &&
+                $target.closeMenu()) ||
+              $others.closeMenu() &&
+              $target.openMenu() &&
+              ((($u02.hasClass(CLS_LOCALNAV) &&
+                    navType === 'MOBI') ||
+                  // run target eq heights for megamenu-multi in tab
+                  ($u02.find(classSelector(CLS_MEGAMENU,
+                      classSelector(CLS_HASMENU))).length &&
+                    navType === 'TAB' &&
+                    !$target.closest(classSelector(CLS_MENUL2)).length)) &&
+                targetEqualHeights($target) || 1) &&
+              toolSwitch();
+          });
+
+        // MENU HIDE UL BG FASTER - DESKTOP
+        $nav.on(evList(EV_MOUSEIN), classSelector([
+            [CLS_DTOP, CLS_NOSUBMENU]
+          ]),
+          function() {
+            $(this).closest('ul').addClass(CLS_HIDE);
+            setTimeout(function() {
+              $u02.find(classSelector(CLS_HIDE)).removeClass(CLS_HIDE);
+            }, 1100);
+          });
+
+        //  MENU HIDE UL BG FASTER - DESKTOP
+        $nav.on(evList(EV_MOUSEIN), classSelector([
+            [CLS_DTOP, CLS_HASMENU]
+          ]),
+          function() {
+            $u02.find(classSelector(CLS_HIDE)).removeClass(CLS_HIDE);
+          });
+
+        // MENU CLOSE SUB MENU LINKS ON FOCUS OF SIBLINGS LINKS - DESKTOP
+        $nav.on(evList(EV_FOCUS), classSelector([CLS_MENUL1, CLS_MENUL2], ' > ul > li > a'),
+          function() {
+            var $items = $(this).closest(classSelector(CLS_HASMENU))
+              .siblings(classSelector(CLS_OPEN));
+            return $items.length && $items.closeMenu();
+          });
+
+        // MENU BACK LINKS
+        $nav.on(evList([EV_CLICK, EV_TOUCH]), classSelector(CLS_BACK),
+          function(e) {
+
+            if (e.isDefaultPrevented()) {
+              return;
+            }
+
+            e.preventDefault();
+
+            return $(this).closest(classSelector(CLS_HASMENU)).closeMenu();
+          });
+
+        $nav.on(evList(EV_MENUOPEN), classSelector([
+            [CLS_TAB, CLS_MEGACTR, CLS_MLINK]
+          ]),
+          function(e) {
+            var $target = $(e.target);
+            return $target.hasClass(CLS_MLINK) &&
+              $target.find(classSelector(CLS_MEGAMENU)).first().openMenu();
+          });
+      }
+
+      function initKeyboardEvents() {
+        ////////////////////////////////////////////////////////////////////////////////////////
+        // KEYBOARD EVENTS
+        ////////////////////////////////////////////////////////////////////////////////////////
+
+        $nav.on(evList(EV_KEYDOWN),
+          function (e) {      
+            
+            /////////KEYBOARD EVENT FOR HAMBURGER MENU////////////
+            if($u02.find(".u02mlink").hasClass(CLS_OPEN)) {                   
+              var firstL1Link = $u02.find(".u02mainmenu").find('a').first(),
+              firstL2Link = $u02.find(".u02mainmenu").find(".u02opened").find('.u02menu-l2').find(".u02nosub").not(".u02menuback").find('a').first(),
+              lastL1Link = $u02.find(".u02mainmenu").find('a').last(),
+              lastL2Link = $u02.find(".u02mainmenu").find(".u02opened").find('.u02menu-l2').find(".u02nosub").find('a').last(),
+              currentItem  = $(document.activeElement).parent();
+              switch (e.keyCode) {                    
+                case 37:
+                  {
+                    if(currentItem.parent().parent().parent().hasClass(CLS_OPEN)) {
+                      currentItem.parent().parent().parent().closeMenu().find('a').first().focus();
+                    }
+                    break;
+                  }
+                case 38:
+                  {                        
+                    currentItem.prev().find('a').first().focus();
+                    if(currentItem.is(":first-child")) {
+                        lastL1Link.focus();                          
+                    }else if (currentItem.is(":nth-child(2)")) {
+                        lastL2Link.focus();
+                    }
+                    break;
+                  }
+                case 13:
+                  {
+                    if($(document.activeElement).parent().hasClass(CLS_NOSUBMENU)) {
+                        break;
+                    }
+                  }
+                case 39:
+                  {  
+                    e.preventDefault();
+                    if(currentItem.hasClass(CLS_HASMENU)){
+                      currentItem.openMenu().find(".u02nosub").not(".u02menuback").find('a').first().focus();
+                    }
+                    break;
+                  }
+                case 40:
+                  {
+                    e.preventDefault();
+                    currentItem.next().find('a').first().focus();
+                    if(currentItem.is(":last-child")) {
+                      if(currentItem.parent().parent().parent().hasClass(CLS_OPEN)) {
+                        firstL2Link.focus();
+                      }else {
+                        firstL1Link.focus();  
+                      }                                                 
+                    }
+                    break;
+                  }
+                case 9:
+                  {
+                   $u02.find(".u02mlink").find('a').focus();
+                   if(e.shiftKey) {
+                      $u02.find(".u02mlinkw1").find('a').focus();
+                    }                               
+                    break;
+                  }
+                case 27:
+                  setTimeout(function () {
+                    $u02.find('.u02mlink').find('a').first().trigger('focus');
+                    $u02.find('#u02main.u02mlink').removeClass(CLS_OPEN);
+                  }, 0);
+                  break;
+                }
+            }
+
+            /////////KEYBOARD EVENT FOR ACCOUNT MENU ///////////
+            if($u02.find(".u02mtool.u02accmenu").hasClass(CLS_OPEN) ) {
+              switch(e.keyCode) {
+                case 27:
+                  {
+                    $u02.find(".u02mtool.u02accmenu").find('a').first().focus(); 
+                    $u02.find("li.u02mtool").removeClass(CLS_OPEN);                            
+                    break;
+                  }
+              }           
+            }  
+
+            /////////KEYBOARD EVENT FOR LANGUAGE MENU////////////
+            if($u02.find(".u02mtool#u02cmenu").hasClass(CLS_OPEN)) {
+              var firstLLink = $u02.find(".u02countrymenu").find('a').first(),
+              lastLLink = $u02.find(".u02countrymenu").find('a').last(),
+              currentItem  = $(document.activeElement).parent();
+              switch(e.keyCode) {
+                case 38:
+                  { 
+                    currentItem.prev().find("a").focus();
+                    if(currentItem.is(":nth-child(2)")) {
+                      lastLLink.focus();                                              
+                    }   
+                    break;
+                  }
+                case 40:
+                  {
+                    e.preventDefault();
+                    currentItem.next().find("a").focus();
+                    if(currentItem.is(":last-child")) {
+                      firstLLink.focus();                                              
+                    }                
+                    break;
+                  }
+                case 9:
+                  {
+                    $("li.u02mtool a:first-child").focus();
+                    if(e.shiftKey) {
+                      $u02.find(".u02mtool#u02cmenu").find("a").first().focus();
+                    }                               
+                    break;
+                  }
+                case 27:
+                  setTimeout(function () {
+                    $u02.find('.u02mtool#u02cmenu').find('a').first().trigger('focus');
+                    $u02.find('li.u02mtool#u02cmenu').removeClass(CLS_OPEN);
+                  }, 0);
+                  break;
+              }
+            }
+            
+            if (e.keyCode === 9){
+              $u02.data(DATA_TFWD, !e.shiftKey);
+            }    
+            if (e.keyCode === 27) {
+              if ($u02.hasClass(CLS_MOBILE)) {
+                $nav.closeMenu();
+              } else {
+                $nav.find(classSelector(CLS_OPEN)).last().closeMenu();
+              }
+            }                
+          });
+      }
+
+      function initDeviceType() {
+
+        var namespc = [NS_U02, 'input'].join('-');
+
+        $nav.add($others).off(eventList([EV_MOUSEIN, EV_TOUCHST, EV_KEYDOWN], namespc))
+          .on(eventList(EV_KEYDOWN, namespc), onFirstTab)
+          .on(eventList([EV_MOUSEIN, EV_POINTOVER], namespc), onFirstMouseover)
+          .on(eventList([EV_TOUCHST, EV_POINTDOWN], namespc), onFirstTouch);
+
+        function onFirstTab(e) {
+          return (e.keyCode === 9) &&
+            // just run this on first tab instead of tool panel initialization
+            $u02.find(classSelector(CLS_TOOLS))
+            .removeAriaAttributes(true).addAriaAttributes(true) &&
+            $nav.add($others)
+            .find(classSelector(NS_U02)).addClass(CLS_TABNAV).end()
+            .off(eventList(EV_KEYDOWN, namespc))
+            .on(eventList(EV_CLICK, namespc), onFirstClick) || 1;
+        }
+
+        function onFirstClick() {
+          return $nav.add($others)
+            .find(classSelector(NS_U02)).removeClass(CLS_TABNAV).end()
+            .off(eventList(EV_CLICK, namespc))
+            .on(eventList(EV_KEYDOWN, namespc), onFirstTab);
+        }
+
+        function onFirstMouseover(e) {
+
+          // generally a very bad idea, but here we have to prevent
+          // the subsequent mouseenter event from firing and unsetting IS_TOUCH
+          if (e.type === EV_POINTOVER) {
+            e.stopImmediatePropagation();
+          }
+
+          // MS Edge/IE ONLY fires mouseevents for touch
+          // 	but listening for pointerevents will reveal pointerType
+          var gotTouch = e.pointerType === 'touch';
+
+          return $nav.add($others)
+            .off(eventList([EV_MOUSEIN, EV_POINTOVER, EV_POINTDOWN, EV_TOUCHST], namespc))
+            .on(
+              eventList(
+                // if touch, keep listening for mouseenter
+                gotTouch ? [EV_MOUSEIN, EV_POINTOVER] : [EV_TOUCHST, EV_POINTDOWN], namespc
+              ),
+              !gotTouch && onFirstTouch || onFirstMouseover) &&
+            // to prevent a falsey return: !(undefined) = true
+            !(IS_TOUCH = gotTouch);
+        }
+
+        function onFirstTouch(e) {
+
+          var gotTouch = e.type === EV_TOUCHST || e.pointerType === 'touch';
+
+          return $nav.add($others)
+            .off(eventList([EV_MOUSEIN, EV_TOUCHST, EV_POINTOVER, EV_POINTDOWN], namespc))
+            .on(eventList([EV_MOUSEIN, EV_POINTOVER], namespc), onFirstMouseover) &&
+            // to prevent a falsey return: !(undefined) = true
+            !(IS_TOUCH = gotTouch);
+        }
+      }
+
+      function initSearchEvents() {
+
+        ////////////////////////////////////////////////////////////////////////////////////////
+        // SEARCH EVENTS
+        ////////////////////////////////////////////////////////////////////////////////////////
+
+        var $search = $u02.find(INPUT_SEARCH),
+          $form = $search.closest(classSelector(CLS_SEARCHFORM)),
+          $submit = $form.find(classSelector(CLS_SEARCHBTTN)),
+          DATA_UNFOCUS = 'unfocusTimeout',
+          // AUTOCOMPLETE CONFIG - can be overridden/extended by window.autocompleteOptions
+          options = function(request, response) {
+            /* globals autocompleteOptions */
+            return jQuery.extend({
+                // gets changed to full path on build -->
+                // 	https://www.oracle.com/search/autosuggest.json....
+                url: '/search/autosuggest.json/browse',
+                data: {
+                  Dy: 1,
+                  contentPaths: '/content/Web/Shared/Auto-Suggest Panel',
+                  templateTypes: 'AutoSuggestPanel',
+                  Ntt: request.term + '*'
+                },
+                success: function(result) {
+                  var dsv = [],
+                    regexp = new RegExp(request.term.replace(/[-[\]{}()*+?.,\\/^$|#\s]/g, '\\$&')),
+                    // checks for existence of additional autocomplete suggestions
+                    // 	fetched from generic-add-autocomplete.js
+                    adds = 'undefined' !== typeof autocompleteVals ?
+                    autocompleteVals.reduce(function(arr, term) {
+                      if (regexp.test(term)) {
+                        arr.push({
+                          label: term
+                        });
+                      }
+                      return arr;
+                    }, []) : [];
+                  if (result.contents[0].autoSuggest[0].totalNumResults > 0) {
+                    dsv = result.contents[0].autoSuggest[0]
+                      .dimensionSearchGroups[0]
+                      .dimensionSearchValues;
+                  }
+                  return response(adds.concat(dsv));
+                },
+                error: function() {
+                  return null;
+                }
+              },
+              // if defined, will overwrite default properties
+              // url, data, success, error
+              'function' === typeof autocompleteOptions ?
+              autocompleteOptions(request, response) : false);
+          };
+
+        // bail out if this is local nav
+        if (!$search.length) {
+          return;
+        }
+
+        // fix any missing trackas attr
+        $search.closest('.u02search').attr('data-trackas', 'header');
+
+        // unset any previous search entry on load
+        $search.val($search[0].defaultValue);
+
+        // ON SEARCH FOCUS, CLOSE MENUS, RESET TIMEOUT,
+        // 	ATTACH BLUR HANDLERS IN DESKTOP
+        $search.on(evList([EV_FOCUS, EV_POINTOVER, EV_MOUSEIN]), focusSearch);
+
+        /* globals autocompleteVals */
+        // Search event is handled in search.js file
+        /*$search.awesomplete({
+            appendTo: classSelector(CLS_SEARCH),
+            source: function(request, response) {
+
+                // get default (oracle.com) options or local overrides
+                var opts = options(request, response);
+
+                $.ajax({
+                    url: opts.url,
+                    dataType: 'json',
+                    data: opts.data,
+                    success: opts.success,
+                    error: opts.error
+                });
+            },
+            minLength: 2,
+            autoFocus: false,
+            select: function(event, ui) {
+                // ui.item = awesomplete input = #txtSearch
+                $search.val(ui.item.value);
+                $form.submit();
+            }
+        });*/
+
+        $form.on(evList(EV_SUBMIT), function(e) {
+
+          var i = $search[0];
+
+          if (inputHasContent($search)) {
+            return true;
+          } else if (!inputHasFocus(i)) {
+            e.preventDefault();
+            return $search.addClass(CLS_FOCUS).focus();
+          } else {
+            e.preventDefault();
+            $search.addClass(CLS_ERROR);
+            i.value = i.defaultValue;
+            i.disabled = 'disabled';
+            return setTimeout(function() {
+              i.disabled = '';
+              $search.removeClass(CLS_ERROR);
+              i.value = i.value.replace(i.defaultValue, '');
+              i.focus();
+            }, 500);
+          }
+        });
+
+        // MOBILE SEARCH POP UP TOGGLE
+        $nav.on(evList([EV_CLICK, EV_TOUCH]), classSelector(CLS_MOBILE, ' #mobisearch'),
+          function(e) {
+
+            e.preventDefault();
+
+            $u02.find('#mobisearch, #u02search').toggleClass(CLS_SEARCHPOP);
+
+            // if open, focus input
+            return ($u02.find('#mobisearch').hasClass(CLS_SEARCHPOP) &&
+              $search.focus() &&
+              $search.trigger(EV_MENUOPEN)) || cleanup();
+          });
+
+        function focusSearch(e) {
+
+          if (e.isDefaultPrevented()) {
+            return;
+          }
+
+          e.preventDefault();
+
+          clearTimeout($search.data(DATA_UNFOCUS));
+
+          $nav.add($others).closeMenu();
+
+          // prevent looping, only call focus if mouseenter
+          return (e.type === EV_MOUSEIN && $search.focus() || 1) &&
+            $search.addClass(CLS_FOCUS) &&
+            $u02.hasClass(CLS_DTOP) &&
+            attachBlurHandlers();
+        }
+
+        function attachBlurHandlers() {
+
+          return $search.off(evList(EV_BLUR)).on(evList(EV_BLUR), function(e) {
+              return ($u02.hasClass(CLS_TABNAV) && !$u02.data(DATA_TFWD) ||
+                  !$u02.hasClass(CLS_TABNAV)) &&
+                cleanup(e);
+            }) &&
+            $form.off(evList(EV_MOUSEOUT)).one(evList(EV_MOUSEOUT), function(e) {
+              // if touch, don't set a timeout for cleanup
+              $search.data(DATA_UNFOCUS, !IS_TOUCH && setTimeout(cleanup.bind(null, e), 1100));
+            }) &&
+            $submit.off(evList(EV_BLUR)).on(evList(EV_BLUR), function(e) {
+              return ($u02.hasClass(CLS_TABNAV) && $u02.data(DATA_TFWD) ||
+                  !$u02.hasClass(CLS_TABNAV)) &&
+                cleanup(e);
+            });
+        }
+
+        function inputHasContent($input) {
+          var i = $input[0],
+            scrubbed = i.value.trim();
+          return scrubbed.length && scrubbed !== i.defaultValue;
+        }
+
+        function cleanup(e) {
+          var isBtnBlur = $submit.is(':active') ||
+            // firefox bugfix - doesn't set active on searchbttn
+            (e && e.originalEvent &&
+              e.originalEvent.explicitOriginalTarget &&
+              $submit.is(e.originalEvent.explicitOriginalTarget));
+          return !inputHasContent($search) &&
+            !isBtnBlur &&
+            $submit.off(evList(EV_BLUR)) &&
+            $search.off(evList(EV_BLUR)) &&
+            $search.removeClass(CLS_FOCUS).blur();
+        }
+      }
+
+      function initSkipPanelEvents() {
+        ////////////////////////////////////////////////////////////////////////////////////////
+        // SKIP PANEL EVENTS
+        ////////////////////////////////////////////////////////////////////////////////////////
+        var $skipmenu = $nav.find('#u02skip2content');
+
+        // should be added regardless of tabnav initialization
+        $skipmenu.removeAttr('tabindex').addAriaAttributes(true);
+
+        // SHOW SKIP BAR
+        $nav.on(evList(EV_FOCUS), '#u02skip2content a', function () {
+          $skipmenu.addClass(CLS_SKIPOPEN).trigger(EV_MENUOPEN);
+          $u02.addClass(CLS_TABNAV);
+
+          // Navigate inside the Skip Bar with right/left arrow keys instead of Tab key
+          $u02.unbind().on(evList(EV_KEYDOWN, 'skip'), function (e) {
+            var firstLLink = $u02.find("#u02skip2content").find('a').first(),
+              lastLLink = $u02.find("#u02skip2content").find('a').last(),
+              currentItem = $(document.activeElement).parent();
+
+            if ($skipmenu.hasClass(CLS_SKIPOPEN)) {
+              switch (e.keyCode) {
+                case 37:
+                  {
+                    if (currentItem.is(":first-child")) {
+                      lastLLink.focus();
+                      break;
+                    }
+                    currentItem.prev().find("a").focus();
+                    break;
+                  }
+
+                case 39:
+                  {
+                    if (currentItem.is(":last-child")) {
+                      firstLLink.focus();
+                      break;
+                    }
+                    currentItem.next().find("a").focus();
+                    break;
+                  }
+
+                case 9:
+                  {
+                    if (!e.shiftKey) {
+                      e.preventDefault();
+                      $skipmenu.removeClass(CLS_SKIPOPEN);
+                      $u02.find(".u02logow1").find('a').focus();
+                    } else {
+                      firstLLink.focus();
+                    }
+                    break;
+                  }
+              }
+            }
+          });
+
+          return $nav.on(evList(EV_KEYDOWN, 'skip'), function (e) {
+            return (e.keyCode === 27) && // escape
+              $nav.off(evList(EV_KEYDOWN, 'skip')) &&
+              // don't return false - prevents key nav
+              $skipmenu.removeClass(CLS_SKIPOPEN) || 1;
+          });
+        });
+
+        // SKIP TO SEARCH
+        $nav.on(evList(EV_CLICK), '#u02skip2s', function(e) {
+
+          e.preventDefault();
+          $skipmenu.removeClass(CLS_SKIPOPEN);
+
+          if ($u02.hasClass(CLS_MOBILE)) {
+            $u02.find('#mobisearch').click();
+          }
+          return $u02.find(INPUT_SEARCH).addClass(CLS_FOCUS).focus();
+        });
+
+        // SKIP TO CONTENT
+        $nav.on(evList(EV_CLICK), '#u02skip2c', function(e) {
+          var $nextel = $nav.add($others).next(), skipSelectors = ['#breadCrumb', '.u03'], desiredActive;
+
+          e.preventDefault();
+          $skipmenu.removeClass(CLS_SKIPOPEN);
+
+          desiredActive = $("article a").first();
+          $("article a").first().attr('tabindex', -1).focus().removeAttr('tabindex')
+          if (desiredActive.length && desiredActive.get(0) === ($( document.activeElement ).get(0) || null)) { return; }
+
+          desiredActive = $("main a").first();
+          $("main a").first().attr('tabindex', -1).focus().removeAttr('tabindex');
+          if (desiredActive.length && desiredActive.get(0) === ($( document.activeElement ).get(0) || null)) { return; }
+
+          if ($nextel.length) {
+            while ($nextel.is(skipSelectors.join()) || ($nextel.find('a').length < 1)) { $nextel = $nextel.next(); }
+            desiredActive = $nextel.find('a').first();
+            $nextel.find('a').first().focus();
+            if (desiredActive.length && desiredActive.get(0) === ($( document.activeElement ).get(0) || null)) { return; }
+          }
+
+          $u02.find('#maincontent').next('a').focus();
+        });
+
+        // HIDE SKIP BAR ON EXIT OF LAST LINK, JUMP TO MENU
+        $nav.on(evList(EV_BLUR), '#u02skip2content li:last-child a', function() {
+          return $u02.data(DATA_TFWD) &&
+            $skipmenu.removeClass(CLS_SKIPOPEN) &&
+            !inputHasFocus('#search-bar-input')
+        });
+
+        // HIDE SKIP BAR ON EXIT OF FIRST LINK GOING BACKWARDS
+        $nav.on(evList(EV_BLUR), '#u02skip2content li:first-child a', function() {
+          return !$u02.data(DATA_TFWD) && $skipmenu.removeClass(CLS_SKIPOPEN);
+        });
+
+        // MAIN MENU CLOSE ON FOCUS OF SKIP LINK
+        $nav.on(evList(EV_FOCUS), classSelector(CLS_DTOP, ' #u02skip2s'),
+          function() {
+            if (!$u02.data(DATA_TFWD)) {
+              $('#u02skip2content').addClass(CLS_SKIPOPEN);
+              $nav.closeMenu();
+            }
+          });
+
+        $(document).on("blur", ".o-hf", function () {
+           $(this).removeClass("o-hf")
+        });
+        $(document).on("mousedown touchstart", "a,button,span[tabindex],li[tabindex],div[tabindex]", function () {
+          $(this).addClass("o-hf")
+        });
+      }
+
+      function initToolPanelEvents() {
+        ////////////////////////////////////////////////////////////////////////////////////////
+        // TOOL MENU EVENTS
+        ////////////////////////////////////////////////////////////////////////////////////////
+
+        // TOOL PANELS OPEN ON HOVER - DESKTOP
+        $nav.on(evList(EV_MOUSEIN), classSelector([
+            [CLS_DTOP, CLS_MTOOL]
+          ]),
+          function(e) {
+            var $li = $(this);
+            $li.removeClass("clicked");
+            return !IS_TOUCH && toolSwitch($li);
+          });
+
+        // TOOL PANELS OPEN/CLOSE ON CLICK - DESKTOP/MOBILE
+        $nav.on(evList([EV_CLICK, EV_TOUCH]), classSelector(CLS_MTOOL, '> a'),
+          function(e) {
+            var $li = $(this).closest(classSelector(CLS_MTOOL));
+            $li.removeClass("clicked");
+            return !e.isDefaultPrevented() &&
+              !hasClickPrevented($li) &&
+              toolSwitch(!$li.hasClass(CLS_OPEN) && $li) &&
+              e.preventDefault();
+          });
+
+          $nav.on(evList([EV_KEYDOWN, EV_TOUCH]), classSelector(CLS_MTOOL, '> a'),
+          function(e) {
+            var $li = $(this).closest(classSelector(CLS_MTOOL));
+            if(e.keyCode === 13) {
+              $li.addClass("clicked");
+              return !e.isDefaultPrevented() &&
+              !hasClickPrevented($li) &&
+              toolSwitch(!$li.hasClass(CLS_OPEN) && $li) &&
+              e.preventDefault();
+            }                        
+          });
+
+        // COUNTRY MENU REGION SELECT - DESKTOP/MOBILE
+        $nav.on(evList([EV_CLICK, EV_TOUCH]), classSelector(CLS_CLINK),
+          function(e) {
+            var $a = $(this),
+              $others = $u02.find(classSelector(CLS_CLINK)).not($a);
+
+            if (hasScrolled() || hasClickPrevented($a) || e.isDefaultPrevented()) {
+              return;
+            }
+
+            if (e.cancelable) {
+              e.preventDefault();
+            }
+
+            $u02.find(classSelector(CLS_CURREGN)).removeClass(CLS_CURREGN);
+            $others.removeAriaAttributes($u02.hasClass(CLS_TABNAV)).blur();
+            $a.closest('li').addClass(CLS_CURREGN);
+            addAriaTree();
+
+            // always do equalHeight on menu open
+            return cmenuEqualHeight(true) &&
+              $a.closest('ul').addClass(CLS_SHOW)
+              .addAriaAttributes($u02.hasClass(CLS_TABNAV));
+          });
+
+        // COUNTRY MENU BACK TO REGION LINKS
+        $nav.on(evList([EV_CLICK, EV_TOUCH]), classSelector([
+            [CLS_CMENU, CLS_BLINK]
+          ]),
+          function(e) {
+
+            e.preventDefault();
+
+            return $u02.find(classSelector([
+                [CLS_CMENU, CLS_SHOW]
+              ]))
+              .removeClass(CLS_SHOW) &&
+              resetCountryMenu(cmenuEqualHeight);
+          });
+      }
+
+      //Adds an aria tree to the country selector
+      function addAriaTree() {
+        var label = $u02.find(classSelector(CLS_REGN)).find('span');
+        $u02.find(classSelector(CLS_CMENU)).attr('role', 'tree');
+        $u02.find(classSelector(CLS_CLINK)).attr('role', 'treeitem').attr('aria-selected', 'false').attr('aria-expanded', 'false').attr('aria-labelledby', label[0] !== undefined ? label[0].innerText : '');
+        $u02.find(classSelector(CLS_CURREGN, '> a')).attr('role', 'treeitem').attr('aria-selected', 'true').attr('aria-expanded', 'true').attr('aria-labelledby', label[0] !== undefined ? label[0].innerText : '');
+        $u02.find(classSelector(CLS_CMENUL2)).find('a').attr('role', 'treeitem');
+      }
+
+      function logError(xhr, status, error) {
+        /* eslint no-console:0 */
+        var endpoint = this && this.url;
+        return endpoint && console.warn(
+          endpoint && 'U02: Unable to load content from ' + endpoint + ' (' + xhr.statusText + ')' ||
+          xhr.message && [xhr.message, xhr.stack].join('\n')
+        );
+      }
+
+      /**
+       * Firefox does not prevent emulated mouse events from
+       * 	touchend events, so set a timeout to return false
+       * 	for 200ms interval after a touchend event
+       */
+      function hasClickPrevented($tgt) {
+        var $target = $tgt;
+        return $target.data('clickPrevent') ||
+          $target.data('clickPrevent', setTimeout(function() {
+            $target.removeData('clickPrevent');
+          }, 600)) && false;
+      }
+
+    })();
+  }
+
+  function checkAriaAccessibility() {
+    var $nav = $('nav.u02nav');
+    //utility-bar
+    $('.u02logos').focusin(function () {
+      $nav.closeMenu();
+    });
+
+    $('.u02local').focusin(function () {
+      $nav.closeMenu();
+    });
+
+    $('#search-bar-container').focusin(function () {
+      $nav.closeMenu();
+    });
+
+    $(".u02ticon.u02regn").focus(function () {
+      $nav.closeMenu();
+    });
+
+    $(".u02ticon.u02user").focus(function () {
+      $nav.closeMenu();
+    });
+
+    // interfaces, book and rest
+    $("header div").click(function () {
+      $nav.closeMenu();
+    });
+
+    $("header div").focusin(function () {
+      $nav.closeMenu();
+    });
+
+    $('main').click(function () {
+        $nav.closeMenu();
+    });
+
+    $('main').focusin(function () {
+      $nav.closeMenu();
+  });
+
+    //solutions
+    $('div.page-container').click(function () {
+      $nav.closeMenu();
+     });
+
+    $('div.page-container').focusin(function () {
+    $nav.closeMenu();
+    });
+
+    // For accessibility
+    $('.u02mtool#u02cmenu').attr("role", "application");
+    $('#u02cmenulink').attr("aria-haspopup", true);
+    $('#u02cmenulink').attr("aria-controls", "countrymenu1");
+    $('.u02menu').attr("role", "application");
+    $('#u02menulink').attr("aria-haspopup", true);
+    $('#u02menulink').attr("aria-controls", "menubar1");
+
+    //Breadcrumbs
+    if($("nav.breadcrumbNav").length === 0) {
+      var $breadcrumb = $("ol.breadcrumb.hidden-print").length ? $("ol.breadcrumb.hidden-print") : $("ol.breadcrumb");
+      $breadcrumb.wrap("<nav aria-label='Breadcrumb' class='breadcrumbNav'></nav>");
+      var lastBreadcrumb = $breadcrumb.find('li:last-child a[href]');
+      if(window.location.href.startsWith(lastBreadcrumb.prop("href"))) {
+        lastBreadcrumb.attr('aria-current','page');
+      }
+    }
+  }
+
+  $(document).ready(function($) {
+
+    $('#u02pfile-sout').on('click', sso_sign_out);
+
+    var $navs = $('nav.u02nav'),
+      stylesLoaded = function() {
+        return !$navs.length ||
+          $navs.css('position') === 'relative';
+      },
+      initFn = function(i) {
+        init($(this), i);
+      },
+      navsFn = $navs.each.bind($navs, initFn),
+      initInterval;
+
+    // remove stuff from sitemap/menucontent that needs to be removed
+    // 	(only used on site map page)
+    $('.u02smap')
+      .addClass(CLS_OCOMBASE)
+      .find('.u02modal, .u02contact').remove().end()
+      .find(classSelector([CLS_MENUL1, CLS_MENUL2], ' > ul > li > hr')).parent().remove().end();
+
+    // rewrite legacy o-call buttons to open lightbox with contactmenu content
+    $('a.o-call:not(.u02ticon)').each(function() {
+      return $(this).attr({
+        rel: 'lightbox',
+        href: '#u02contactmenu',
+        'data-theme': 'light'
+      });
+    });
+
+    checkAriaAccessibility();
+    
+    // make sure styles have loaded before initializing
+    //  - otherwise equalHeight calcs are thrown off -
+    //  if not, set an interval to recheck
+    return (stylesLoaded() && navsFn()) ||
+      (initInterval = setInterval(function() {
+        return stylesLoaded() &&
+          // ! to return true
+          !clearInterval(initInterval) &&
+          navsFn();
+      }, 50));
+  });
+
+})(jQuery, window);
+
+/* ############################################################################################# */
+/* ####			DEBUG	ONLY			#################################################################### */
+/* ############################################################################################# */
+
+// $(document).ready(function($) {
+// 	'use strict';
+// 	return /u02debug=1/.test(window.location.search) &&
+// 					$('.u02nav').first()
+// 						.on('u02ready', function() {
+// 							// $('.u02z86d').remove();
+// 							//  ...other things you want to open/check here ...
+// 						});
+// });
+
+// cookie to test hello, name cookie on localhost - DO NOT COMMIT THIS FILE WITH THIS UNCOMMENTED!!!!
+
+// fakeuser
+// document.cookie = 'ORA_UCM_INFO=3~93446F2E9B0E5ADEE040548C2D706F69~JeanLuc~Picard~jeanluc.picard@oracle.com';
+
+// no name
+// document.cookie = 'ORA_UCM_INFO=3~93446F2E9B0E5ADEE040548C2D706F69~NOT_FOUND~NOT_FOUND~jeanluc.picard.picard.picard@oracle.com';
+
+// no acct
+// document.cookie = 'ORA_UCM_INFO=3~93446F2E9B0E5ADEE040548C2D706F69~Jean Luc~Picard';
+
+/* ####		END DEBUG		########################################################################## */
+
+
+/*! U10 */
+jQuery(document).ready(function($) {
+
+  // backwards compatibility for only using id on u10v0
+  $('[id="u10"]').addClass('u10').not('.u10v0').removeAttr('id');
+
+  $('.u10w3').append('<div class="u10btn"></div>');
+  $('ul.u10-links li').last().addClass('u10last');
+
+  var firstLink = $('.u10-links li:first-child').clone().addClass('last');
+		$('.u10-links li:nth-child(3)').after('<li class="u10break"></li>');
+		$('.u10last').after(firstLink);
+    $('.u10last').after('<li class="u10break"></li>');
+
+  $('.u10w6.icn-googleplus').closest('.u10w2').remove();
+
+  $('.u10').on('click', '.u10w3 h5, .u10btn', function() {
+    var $u10tog = $(this).parents('div.u10w3'),
+      $u10act = $('div.u10active');
+    $u10tog.toggleClass('u10active');
+    $u10act.not($u10tog).removeClass('u10active');
+  });
+}, true);
